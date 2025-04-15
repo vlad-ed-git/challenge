@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Exo_2, Rajdhani } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const inter = Inter({
+const exo2 = Exo_2({
   subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-exo2",
 });
 
-const poppins = Poppins({
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+const rajdhani = Rajdhani({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-rajdhani",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +29,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter} ${poppins} antialiased`}
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          rajdhani.variable,
+          exo2.variable
+        )}
       >
         {children}
       </body>
