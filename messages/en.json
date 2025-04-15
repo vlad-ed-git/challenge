@@ -1,0 +1,11 @@
+{
+    "app_name" : "CHALLENGE",
+    "start_game" : "Begin",
+    "footer_text": "Made by Vladimir Peter Kowelo @ ASU",
+    "loading_auth_text": "Loading...",
+    "landing_page_footer_text" : "This is both a mirror and a window. See how decisions reflect power, envision true equity.",
+    "description": {
+        "paragraph1": "Step into a <highlight>reflective, participatory, and justice-oriented space</highlight> for engaging with refugee education policy. Rooted in critical pedagogy, this dynamic simulation exposes the <highlight>contradictions, moral dilemmas, and political tensions</highlight> of real-world policymaking.",
+        "paragraph2": "In the Republic of Bean, make tough choices under <highlight>tight budget constraints</highlight>. Grapple with competing demands: state control, citizen fears, and human rights. Don't just learn about policy – <highlight>participate in shaping it</highlight> and challenge dominant paradigms."
+    }
+}
