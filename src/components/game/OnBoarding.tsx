@@ -7,14 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl'; 
+import { OnboardingStep } from './types';
 
-export enum OnboardingStep {
-  CHOOSE_MODE,
-  WHO_YOU_ARE,
-  WHO_AI_ARE,
-  THE_GOAL,
-  COMPLETE,
-}
 
 interface GameOnboardingProps {
   onOnboardingComplete: () => void; 
