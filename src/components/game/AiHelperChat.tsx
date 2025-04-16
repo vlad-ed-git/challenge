@@ -6,11 +6,14 @@ import { Input } from "../ui/input";
 
 export interface ChatMessageProps {
   sender: "user" | "ai_helper";
-  text: string;
+    text: string;
+    context: string;
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text }) => {
-  const isUser = sender === "user";
+    const isUser = sender === "user";
+    
+
   return (
     <div className={cn("flex mb-2", isUser ? "justify-end" : "justify-start")}>
       <div
@@ -52,7 +55,9 @@ export const ChatDisplay: React.FC<ChatDisplayProps> = ({ messages }) => {
         </p>
       )}
       {messages.map((msg, index) => (
-        <ChatMessage key={index} sender={msg.sender} text={msg.text} />
+          <ChatMessage key={index} sender={msg.sender} text={msg.text}
+            context={msg.context}
+              />
       ))}
       <div ref={messagesEndRef} />
     </div>

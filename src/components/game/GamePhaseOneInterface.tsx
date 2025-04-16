@@ -28,23 +28,100 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
   );
   const budgetLimit = 14;
 
-   const [chatMessages, setChatMessages] = useState<ChatMessageProps[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessageProps[]>([]);
   const [isAiHelperResponding, setIsAiHelperResponding] = useState(false);
+ 
+  const generateAiHelperContext = useCallback(() => {
+    let context = "Current Game State Context:\n\n";
+
+    // 1. Budget Status
+    context += `Budget: ${currentCost} / ${budgetLimit} units spent. Remaining: ${
+      budgetLimit - currentCost
+    }.\n`;
+    if (currentCost > budgetLimit) {
+      context += "WARNING: Current selections exceed budget limit!\n";
+    }
+    context += "\n";
+
+    // 2. Current Selections Summary
+    context += "Current Policy Selections:\n";
+    let selectionCount = 0;
+    gamePolicyData.forEach((area) => {
+      const selectedOptionId = selections[area.id];
+      if (selectedOptionId) {
+        const option = area.options.find((opt) => opt.id === selectedOptionId);
+        context += `- ${area.id} (${t(area.nameKey)}): ${option?.id} (${t(
+          option?.titleKey || "N/A"
+        )}) - Cost: ${option?.cost}\n`;
+        selectionCount++;
+      } else {
+        context += `- ${area.id} (${t(area.nameKey)}): Not Selected Yet\n`;
+      }
+    });
+    context += `Total Areas Selected: ${selectionCount} / ${gamePolicyData.length}.\n\n`;
+
+    // 3. Currently Focused Area (if any)
+    if (activeAreaId) {
+      const activeArea = gamePolicyData.find((a) => a.id === activeAreaId);
+      if (activeArea) {
+        context += `User is currently viewing options for Policy Area: ${activeAreaId} (${t(
+          activeArea.nameKey
+        )}).\n`;
+
+        // Add details about the currently focused area's options
+        context += "Available options for this area:\n";
+        activeArea.options.forEach((option) => {
+          context += `- ${option.id} (${t(option.titleKey)}): Cost ${
+            option.cost
+          } - ${t(option.descriptionKey)}\n`;
+        });
+      } else {
+        context += "User is viewing an area, but data is missing for it.\n";
+      }
+    } else {
+      context +=
+        "User is not currently focused on a specific policy area's options.\n";
+    }
+
+    // 4. Game Progress Status
+    context += "\nGame Progress Status:\n";
+    context += `- Areas Selected: ${selectionCount}/${gamePolicyData.length}\n`;
+    context += `- Budget Status: ${currentCost}/${budgetLimit} (${
+      budgetExceeded ? "EXCEEDED" : "Within limit"
+    })\n`;
+    context += `- Can Submit: ${canSubmit ? "Yes" : "No"}\n`;
+
+    if (!canSubmit) {
+      context += "Reasons for inability to submit:\n";
+      if (!allAreasSelected)
+        context += "- Not all policy areas have been selected yet\n";
+      if (budgetExceeded) context += "- Budget limit has been exceeded\n";
+      if (allAreasSelectedWithSameOption())
+        context += "- All areas have the same option selected (need variety)\n";
+    }
+
+  return context;
+}, [selections, activeAreaId, currentCost, budgetLimit]);
   
   const handleSendMessage = useCallback(async (messageText: string) => {
+    if (!messageText.trim()) return;
+    const context = generateAiHelperContext();
+    console.log("AI Helper Context:", context);
     const newUserMessage: ChatMessageProps = {
       sender: "user",
       text: messageText,
+      context: context,
     };
     setChatMessages((prev) => [...prev, newUserMessage]);
     setIsAiHelperResponding(true);
 
-    // TODO 
+    // TODO
     console.log("User asked AI Helper:", messageText);
     await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate delay
     const aiResponse: ChatMessageProps = {
       sender: "ai_helper",
-      text: `I received your question about: "${messageText}". In Phase II, you can discuss this with the policy agents.`, 
+      text: `I received your question about: "${messageText}". In Phase II, you can discuss this with the policy agents.`,
+      context: ""
     };
     setChatMessages((prev) => [...prev, aiResponse]);
     setIsAiHelperResponding(false);
@@ -82,17 +159,17 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
   const allAreasSelected = gamePolicyData.every(
     (area) => !!selections[area.id]
   );
-    
-   
-    const allAreasSelectedWithSameOption = () => {
-        // checks if all the selections have the exact same option set
-        const firstSelection = Object.values(selections)[0];
-        return Object.values(selections).every(
-          (optionId) => optionId === firstSelection
-        );
-  };  
+
+  const allAreasSelectedWithSameOption = () => {
+    // checks if all the selections have the exact same option set
+    const firstSelection = Object.values(selections)[0];
+    return Object.values(selections).every(
+      (optionId) => optionId === firstSelection
+    );
+  };
   const budgetExceeded = currentCost > budgetLimit;
-  const canSubmit = allAreasSelected && !allAreasSelectedWithSameOption() && !budgetExceeded;
+  const canSubmit =
+    allAreasSelected && !allAreasSelectedWithSameOption() && !budgetExceeded;
 
   const handleSubmit = () => {
     if (canSubmit) {
