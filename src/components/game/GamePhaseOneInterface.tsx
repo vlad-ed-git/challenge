@@ -12,6 +12,7 @@ import { gamePolicyData } from "@/lib/types/policy_types";
 import { AgentMeter } from "./AgentMeter";
 import { PolicyAreaBarItem } from "./PolicyAreaBarItem";
 import { FocusedPolicyOption } from "./FocusedPolicyOption";
+import { ChatDisplay, ChatInput, ChatMessageProps } from "./AiHelperChat";
 
 interface GamePhaseOneProps {
   onPhaseComplete: (selections: Required<PolicySelections>) => void;
@@ -26,6 +27,28 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
     gamePolicyData.length > 0 ? gamePolicyData[0].id : null
   );
   const budgetLimit = 14;
+
+   const [chatMessages, setChatMessages] = useState<ChatMessageProps[]>([]);
+  const [isAiHelperResponding, setIsAiHelperResponding] = useState(false);
+  
+  const handleSendMessage = useCallback(async (messageText: string) => {
+    const newUserMessage: ChatMessageProps = {
+      sender: "user",
+      text: messageText,
+    };
+    setChatMessages((prev) => [...prev, newUserMessage]);
+    setIsAiHelperResponding(true);
+
+    // TODO 
+    console.log("User asked AI Helper:", messageText);
+    await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate delay
+    const aiResponse: ChatMessageProps = {
+      sender: "ai_helper",
+      text: `I received your question about: "${messageText}". In Phase II, you can discuss this with the policy agents.`, 
+    };
+    setChatMessages((prev) => [...prev, aiResponse]);
+    setIsAiHelperResponding(false);
+  }, []);
 
   const handleSelectOption = useCallback(
     (areaId: PolicyAreaId, optionId: PolicyOptionId) => {
@@ -103,6 +126,7 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-start mb-3 md:mb-4 px-1 md:px-2">
+        {/* AI AGENTS */}
         <div className="flex flex-col items-start space-y-1">
           <span className="text-xs font-semibold text-white uppercase tracking-wider ml-1">
             {t("phase1_agentHappiness")}
@@ -114,6 +138,7 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
           </div>
         </div>
 
+        {/* BUDGET */}
         <div className="flex flex-col items-end space-y-1">
           <span className="text-xs font-semibold text-white uppercase tracking-wider mr-1">
             {t("phase1_budgetStatusTitle")}
@@ -151,121 +176,135 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
         </div>
       </div>
 
-      <div className="flex justify-center items-center mb-3 md:mb-4">
-        <div className="text-center max-w-xl px-4">
-          <h2 className="text-lg font-semibold font-heading text-primary">
-            {t("phase1_instructionsTitle")}
-          </h2>
-          <p className="text-sm text-white font-semibold">
-            {t("phase1_instructionsText")}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex-grow flex flex-col items-center justify-center relative mb-3 md:mb-4">
-        <AnimatePresence mode="wait">
-          {activeAreaData ? (
-            <motion.div
-              key={activeAreaData.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="w-full max-w-4xl px-2"
-            >
-              <h3 className="text-xl font-semibold font-heading text-primary text-center mb-3">
-                {t(activeAreaData.nameKey)}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                {activeAreaData.options.map((option) => {
-                  const isSelected =
-                    selections[activeAreaData.id] === option.id;
-                  const currentSelectionCost = selections[activeAreaData.id]
-                    ? activeAreaData.options.find(
-                        (o) => o.id === selections[activeAreaData.id]
-                      )?.cost ?? 0
-                    : 0;
-                  const costIfSelected =
-                    currentCost - currentSelectionCost + option.cost;
-                  const isDisabled =
-                    !isSelected && costIfSelected > budgetLimit;
-
-                  return (
-                    <FocusedPolicyOption
-                      key={option.id}
-                      option={option}
-                      isSelected={isSelected}
-                      isDisabled={isDisabled}
-                      area={activeAreaData}
-                      onSelect={() =>
-                        handleSelectOption(activeAreaData.id, option.id)
-                      }
-                      t={t}
-                    />
-                  );
-                })}
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="prompt"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="text-center text-white flex flex-col items-center"
-            >
-              <Info className="h-12 w-12 text-slate-400 mb-4" />
-              <p className="text-lg font-medium">
-                {t("phase1_selectAreaPrompt")}
+      <div className="flex-grow flex gap-3 md:gap-4">
+        <div className="flex-grow flex flex-col items-center justify-center relative w-2/3">
+          <div className="flex justify-center items-center mb-3 md:mb-4">
+            <div className="text-center max-w-xl px-4">
+              <h2 className="text-lg font-semibold font-heading text-primary">
+                {t("phase1_instructionsTitle")}
+              </h2>
+              <p className="text-sm text-white font-semibold">
+                {t("phase1_instructionsText")}
               </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="flex-grow flex flex-col items-center justify-center relative mb-3 md:mb-4">
+            <AnimatePresence mode="wait">
+              {activeAreaData ? (
+                <motion.div
+                  key={activeAreaData.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full max-w-4xl px-2"
+                >
+                  <h3 className="text-xl font-semibold font-heading text-primary text-center mb-3">
+                    {t(activeAreaData.nameKey)}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                    {activeAreaData.options.map((option) => {
+                      const isSelected =
+                        selections[activeAreaData.id] === option.id;
+                      const currentSelectionCost = selections[activeAreaData.id]
+                        ? activeAreaData.options.find(
+                            (o) => o.id === selections[activeAreaData.id]
+                          )?.cost ?? 0
+                        : 0;
+                      const costIfSelected =
+                        currentCost - currentSelectionCost + option.cost;
+                      const isDisabled =
+                        !isSelected && costIfSelected > budgetLimit;
+
+                      return (
+                        <FocusedPolicyOption
+                          key={option.id}
+                          option={option}
+                          isSelected={isSelected}
+                          isDisabled={isDisabled}
+                          area={activeAreaData}
+                          onSelect={() =>
+                            handleSelectOption(activeAreaData.id, option.id)
+                          }
+                          t={t}
+                        />
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="prompt"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="text-center text-white flex flex-col items-center"
+                >
+                  <Info className="h-12 w-12 text-slate-400 mb-4" />
+                  <p className="text-lg font-medium">
+                    {t("phase1_selectAreaPrompt")}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        <div className="w-1/3 flex flex-col border border-slate-200 rounded-lg bg-white shadow-sm flex-shrink-0">
+          <ChatDisplay messages={chatMessages} />
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isSending={isAiHelperResponding}
+          />
+        </div>
       </div>
 
-      <motion.div
-        variants={gridVariants}
-        initial="hidden"
-        animate="visible"
-        className="mt-auto flex items-center justify-between gap-3 md:gap-4 p-2 rounded-lg bg-slate-50 border border-slate-200"
-      >
-        <div className="grid grid-cols-7 gap-1 md:gap-2 flex-grow">
-          {gamePolicyData.map((area, index) => (
-            <motion.div key={area.id} variants={itemFadeUp}>
-              <PolicyAreaBarItem
-                area={area}
-                isSelected={!!selections[area.id]}
-                isActive={activeAreaId === area.id}
-                onClick={() => handleAreaFocus(area.id)}
-                t={t}
-              />
-            </motion.div>
-          ))}
-        </div>
-        <div className="flex flex-col items-center">
-          <Button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-slate-300 disabled:text-white disabled:cursor-not-allowed px-6 py-3 h-full"
-            size="lg"
-            title={!canSubmit ? t("phase1_allAreasSelectedPrompt") : ""}
-          >
-            {t("phase1_confirmSelectionsButton")}
-          </Button>
+      <div className="flex justify-center items-center mt-3 md:mt-4 px-1 md:px-2">
+        <motion.div
+          variants={gridVariants}
+          initial="hidden"
+          animate="visible"
+          className="mt-auto flex items-center justify-between gap-3 md:gap-4 p-2 rounded-lg bg-slate-50 border border-slate-200"
+        >
+          <div className="grid grid-cols-7 gap-1 md:gap-2 flex-grow">
+            {gamePolicyData.map((area, index) => (
+              <motion.div key={area.id} variants={itemFadeUp}>
+                <PolicyAreaBarItem
+                  area={area}
+                  isSelected={!!selections[area.id]}
+                  isActive={activeAreaId === area.id}
+                  onClick={() => handleAreaFocus(area.id)}
+                  t={t}
+                />
+              </motion.div>
+            ))}
+          </div>
+          <div className="flex flex-col items-center">
+            <Button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-slate-300 disabled:text-white disabled:cursor-not-allowed px-6 py-3 h-full"
+              size="lg"
+              title={!canSubmit ? t("phase1_allAreasSelectedPrompt") : ""}
+            >
+              {t("phase1_confirmSelectionsButton")}
+            </Button>
 
-          {!canSubmit && !allAreasSelected && (
-            <p className="text-xs text-orange-700 mt-1 text-center w-[180px]">
-              {t("phase1_allAreasSelectedPrompt")}
-            </p>
-          )}
-          {!canSubmit && allAreasSelected && budgetExceeded && (
-            <p className="text-xs text-red-700 mt-1 text-center w-[180px] flex items-center justify-center">
-              <AlertTriangle className="h-3 w-3 mr-1 flex-shrink-0" />{" "}
-              {t("phase1_budgetExceededWarning")}
-            </p>
-          )}
-        </div>
-      </motion.div>
+            {!canSubmit && !allAreasSelected && (
+              <p className="text-xs text-orange-700 mt-1 text-center w-[180px]">
+                {t("phase1_allAreasSelectedPrompt")}
+              </p>
+            )}
+            {!canSubmit && allAreasSelected && budgetExceeded && (
+              <p className="text-xs text-red-700 mt-1 text-center w-[180px] flex items-center justify-center">
+                <AlertTriangle className="h-3 w-3 mr-1 flex-shrink-0" />{" "}
+                {t("phase1_budgetExceededWarning")}
+              </p>
+            )}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }

@@ -209,5 +209,8 @@
     "phase1_advantageLabel": "Advantage",
     "phase1_disadvantageLabel": "Disadvantage",
     "phase1_costLabel": "Cost",
-    "phase1_selectAreaPrompt": "Please select a policy area below to view options."
+    "phase1_selectAreaPrompt": "Please select a policy area below to view options.",
+    "phase1_chatPlaceholder": "Ask AI Helper a question...",
+    "phase1_chatSend": "Send",
+    "phase1_chatSending": "Sending..."
 }

@@ -43,11 +43,13 @@ export const FocusedPolicyOption: React.FC<{
         isDisabled ? "" : "hover:shadow-md"
       )}
       onClick={!isDisabled ? onSelect : undefined}
-    >
+      >
+          
       <Badge
         variant="outline"
         className="absolute top-2 right-2 text-xs px-1.5 py-0.5 border-slate-300 text-black"
-      >
+          >
+              
         <Coins className="h-3 w-3 mr-1" /> {t("phase1_costLabel")}:{" "}
         <span className="font-bold">{option.cost}</span>
       </Badge>
