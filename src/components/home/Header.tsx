@@ -5,10 +5,15 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/firebase/auth";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const SiteHeader = () => {
-  const { currentUserProfile, loadingUserProfile } = useAuth();
+
+  // get the pathname from the URL
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
+
+  const { currentUserProfile, loadingUserProfile, logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const route = useRouter();
@@ -33,6 +38,17 @@ const SiteHeader = () => {
     setIsLoading(false);
   };
 
+
+  const onLogout = async () => {
+    if (isLoading) {
+      return;
+    }
+    setIsLoading(true);
+    await logout();
+    setIsLoading(false);
+    route.push("/");
+  };
+
   const t = useTranslations("");
   return (
     <motion.header
@@ -48,16 +64,30 @@ const SiteHeader = () => {
             {t("app_name")}
           </span>
         </div>
-        <Button
-          onClick={onStartGame}
-          disabled={isLoading}
-          size="sm"
-          variant="ghost"
-          className="px-4 text-gray-200 hover:bg-white/10 hover:text-gray-50"
-          aria-label="Begin the CHALLENGE"
-        >
-          {isLoading ? t("loading_auth_text") : t("start_game")}
-        </Button>
+        {isHomePage && (
+          <Button
+            onClick={onStartGame}
+            disabled={isLoading}
+            size="sm"
+            variant="ghost"
+            className="px-4 text-gray-200 hover:bg-white/10 hover:text-gray-50"
+            aria-label="Begin the CHALLENGE"
+          >
+            {isLoading ? t("loading_auth_text") : t("start_game")}
+          </Button>
+        )}
+        {!isHomePage && (
+          <Button
+            onClick={onLogout}
+            disabled={isLoading}
+            size="sm"
+            variant="destructive"
+            className="px-4 text-gray-200 hover:bg-white/10 hover:text-gray-50"
+            aria-label="Begin the CHALLENGE"
+          >
+            {isLoading ? t("loading_auth_text") : t("logout")}
+          </Button>
+        )}
       </div>
     </motion.header>
   );

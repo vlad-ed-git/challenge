@@ -99,103 +99,106 @@ const LandingPage = () => {
   const t = useTranslations("");
   
   return (
-    <main className="flex flex-grow flex-col items-center justify-center p-4 pt-10 md:pt-0 overflow-hidden relative">
-      <motion.div
-        className="absolute inset-0 z-0 opacity-[0.07]"
-        style={{
-          backgroundImage: `linear-gradient(to right, #4682B4 1px, transparent 1px), linear-gradient(to bottom, #4682B4 1px, transparent 1px)`,
-          backgroundSize: `60px 60px`,
-        }}
-        animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
-        transition={{
-          duration: 220,
-          ease: "linear",
-          repeat: Infinity,
-          repeatType: "mirror",
-        }}
-      />
-
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="w-full max-w-4xl text-center z-10 flex flex-col items-center"
-      >
-        {/* Apply heading font */}
-        <motion.h1
-          variants={itemFadeUp}
-          className="text-6xl md:text-8xl font-extrabold tracking-tighter mb-4 inline-flex text-primary font-heading"
-          aria-label={title}
-        >
-          <AnimatePresence>
-            {titleLetters.map((letter, index) => (
-              <motion.span
-                key={`${letter}-${index}`}
-                initial="hidden"
-                animate="visible"
-                variants={letterVariants}
-                transition={{
-                  delay:
-                    index * 0.05 +
-                    containerVariants.visible.transition.delayChildren,
-                }}
-                className="inline-block"
-              >
-                {letter === " " ? "\u00A0" : letter}
-              </motion.span>
-            ))}
-          </AnimatePresence>
-        </motion.h1>
-
-        <motion.p
-          variants={itemFadeUp}
-          className="text-md lg:text-xl mb-6 font-medium text-gray-400 px-4 max-w-2xl"
-        >
-          (Creating Holistic Approaches for Learning, Liberty, and Equity in New
-          Global Education)
-        </motion.p>
+      <>
+        <motion.div
+          className="absolute inset-0 z-0 opacity-[0.07]"
+          style={{
+            backgroundImage: `linear-gradient(to right, #4682B4 1px, transparent 1px), linear-gradient(to bottom, #4682B4 1px, transparent 1px)`,
+            backgroundSize: `60px 60px`,
+          }}
+          animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+          transition={{
+            duration: 220,
+            ease: "linear",
+            repeat: Infinity,
+            repeatType: "mirror",
+          }}
+        />
 
         <motion.div
-          variants={itemFadeUp}
-          className="max-w-3xl mx-auto mb-10 space-y-4 text-lg md:text-xl text-gray-200 leading-relaxed font-sans"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="w-full max-w-4xl text-center z-10 flex flex-col items-center"
         >
-          <p>
-            {t.rich("description.paragraph1", {
-              highlight: (chunks) => <Highlight>{chunks}</Highlight>,
-            })}
-          </p>
-
-          <p>
-            {t.rich("description.paragraph2", {
-              highlight: (chunks) => <Highlight>{chunks}</Highlight>,
-            })}
-          </p>
-        </motion.div>
-
-        <motion.div variants={itemFadeUp} className="relative">
-          <motion.div
-            variants={buttonPulse}
-            animate="pulse"
-            whileHover="hover"
-            whileTap="tap"
-            className="inline-block"
+          {/* Apply heading font */}
+          <motion.h1
+            variants={itemFadeUp}
+            className="text-6xl md:text-8xl font-extrabold tracking-tighter mb-4 inline-flex text-primary font-heading"
+            aria-label={title}
           >
-            <Button
-              size="lg"
-              onClick={onStartGame}
-              className="px-16 py-8 text-xl md:text-2xl font-bold font-sans text-primary-foreground bg-primary rounded-lg shadow-lg transition-all duration-300 hover:bg-primary/90"
-              aria-label="Begin the CHALLENGE"
-            >
-              {t("start_game")}
-            </Button>
-          </motion.div>
-        </motion.div>
+            <AnimatePresence>
+              {titleLetters.map((letter, index) => (
+                <motion.span
+                  key={`${letter}-${index}`}
+                  initial="hidden"
+                  animate="visible"
+                  variants={letterVariants}
+                  transition={{
+                    delay:
+                      index * 0.05 +
+                      containerVariants.visible.transition.delayChildren,
+                  }}
+                  className="inline-block"
+                >
+                  {letter === " " ? "\u00A0" : letter}
+                </motion.span>
+              ))}
+            </AnimatePresence>
+          </motion.h1>
 
-        <motion.p variants={itemFadeUp} className="text-sm text-gray-500 mt-12">
-          {t("landing_page_footer_text")}
-        </motion.p>
-      </motion.div>
-    </main>
+          <motion.p
+            variants={itemFadeUp}
+            className="text-md lg:text-xl mb-6 font-medium text-gray-400 px-4 max-w-2xl"
+          >
+            (Creating Holistic Approaches for Learning, Liberty, and Equity in
+            New Global Education)
+          </motion.p>
+
+          <motion.div
+            variants={itemFadeUp}
+            className="max-w-3xl mx-auto mb-10 space-y-4 text-lg md:text-xl text-gray-200 leading-relaxed font-sans"
+          >
+            <p>
+              {t.rich("description.paragraph1", {
+                highlight: (chunks) => <Highlight>{chunks}</Highlight>,
+              })}
+            </p>
+
+            <p>
+              {t.rich("description.paragraph2", {
+                highlight: (chunks) => <Highlight>{chunks}</Highlight>,
+              })}
+            </p>
+          </motion.div>
+
+          <motion.div variants={itemFadeUp} className="relative">
+            <motion.div
+              variants={buttonPulse}
+              animate="pulse"
+              whileHover="hover"
+              whileTap="tap"
+              className="inline-block"
+            >
+              <Button
+                size="lg"
+                onClick={onStartGame}
+                className="px-16 py-8 text-xl md:text-2xl font-bold font-sans text-primary-foreground bg-primary rounded-lg shadow-lg transition-all duration-300 hover:bg-primary/90"
+                aria-label="Begin the CHALLENGE"
+              >
+                {t("start_game")}
+              </Button>
+            </motion.div>
+          </motion.div>
+
+          <motion.p
+            variants={itemFadeUp}
+            className="text-sm text-gray-500 mt-12"
+          >
+            {t("landing_page_footer_text")}
+          </motion.p>
+        </motion.div>
+      </>
   );
 };
 

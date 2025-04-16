@@ -1,16 +1,18 @@
 
 export const usersCollection = "users";
 
-export type EducationalLevel =
-    | "Did not complete High School"
-    | "High School Diploma or Equivalent"
-    | "College, No Degree"
-    | "Associate's Degree"
-    | "Bachelor's Degree"
-    | "Master's Degree"
-    | "Doctoral Degree (PhD, EdD, etc.)"
-    | "Professional Degree (MD, JD, etc.)"
-    | "Other/Prefer not to say";
+
+export enum EducationalLevel {
+    DID_NOT_COMPLETE_HIGH_SCHOOL = "did_not_complete_high_school_label_key",
+    HIGH_SCHOOL_DIPLOMA_OR_EQUIVALENT = "high_school_diploma_or_equivalent_label_key",
+    COLLEGE_NO_DEGREE = "college_no_degree_label_key",
+    ASSOCIATES_DEGREE = "associates_degree_label_key",
+    BACHELORS_DEGREE = "bachelors_degree_label_key",
+    MASTERS_DEGREE = "masters_degree_label_key",
+    DOCTORAL_DEGREE = "doctoral_degree_label_key",
+    PROFESSIONAL_DEGREE = "professional_degree_label_key",
+    OTHER_PREFER_NOT_TO_SAY = "other_prefer_not_to_say_label_key"
+}
 
 export type DisplacementStatus =
     | { hasExperience: false; narrative: null }
@@ -86,3 +88,4 @@ export class UserProfile {
         return this.displacementStatus.hasExperience;
     }
 }
+

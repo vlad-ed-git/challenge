@@ -48,7 +48,9 @@ export default async function RootLayout({
           <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-950 text-gray-100 font-sans overflow-x-hidden">
             <AuthProvider>
               <SiteHeader />
-              {children}
+              <main className="flex flex-grow flex-col items-center justify-center p-4 pt-10 md:pt-0 overflow-hidden relative">
+                {children}
+              </main>
               <SiteFooter />
             </AuthProvider>
           </div>
