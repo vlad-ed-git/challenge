@@ -6,10 +6,8 @@ import { getStructuredAgentResponse } from '../../ai/get_structured_agent_respon
 
 const validAgentRoles = Object.values(AgentRole);
 
-export async function POST(
-    request: Request,
-    { params }: { params: { agentRole: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ agentRole: string }> }) {
+    const params = await props.params;
     const agentRole = params.agentRole as AgentRole;
 
     if (!validAgentRoles.includes(agentRole)) {
