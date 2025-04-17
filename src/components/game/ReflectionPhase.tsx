@@ -24,21 +24,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAuth } from "@/lib/firebase/auth"; 
+import { useAuth } from "@/lib/firebase/auth";
 import { PolicySelections } from "./types";
-import { ReflectionFormValues, reflectionQuestionKeys, ReflectionReportData, ReflectionSchema } from "@/lib/form_models/reflection_schema";
+import {
+  ReflectionFormValues,
+  reflectionQuestionKeys,
+  ReflectionReportData,
+  ReflectionSchema,
+} from "@/lib/form_models/reflection_schema";
 import { CheckCircle } from "lucide-react";
 import { createReflection } from "@/lib/firebase/reflections/create_reflection";
 
 interface ReflectionPhaseProps {
   phaseOneSelections: Required<PolicySelections> | null;
   phaseTwoSelections: Required<PolicySelections> | null;
-  
+
   agent1StateHappiness: number;
   agent2CitizensHappiness: number;
   agent3HumanRightsHappiness: number;
-  
-  
 }
 
 export function ReflectionPhase({
@@ -47,17 +50,16 @@ export function ReflectionPhase({
   agent1StateHappiness,
   agent2CitizensHappiness,
   agent3HumanRightsHappiness,
-}: 
-ReflectionPhaseProps) {
-  const t = useTranslations(""); 
-  const { currentUserProfile } = useAuth(); 
+}: ReflectionPhaseProps) {
+  const t = useTranslations("");
+  const { currentUserProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
 
   const form = useForm<ReflectionFormValues>({
     resolver: zodResolver(ReflectionSchema),
-    
+
     defaultValues: reflectionQuestionKeys.reduce((acc, key) => {
       acc[key] = "";
       return acc;
@@ -80,7 +82,7 @@ ReflectionPhaseProps) {
 
     const reportData: ReflectionReportData = {
       userId: currentUserProfile.uid,
-      userProfileSnapshot: { ...currentUserProfile }, 
+      userProfileSnapshot: { ...currentUserProfile },
       phaseOneSelections: phaseOneSelections,
       phaseTwoSelections: phaseTwoSelections,
       agentHappiness: {
@@ -94,34 +96,21 @@ ReflectionPhaseProps) {
     };
 
     try {
-      console.log("Submitting Report Data:", reportData);
-      
-      
-        await createReflection(
-            currentUserProfile.uid,
-            reportData
-      ); 
+      await createReflection(currentUserProfile.uid, reportData);
 
       await _sendReportEmail(reportData);
-      
 
       setSubmitSuccess(true);
-      console.log("Reflection submitted successfully!");
-      
-      
     } catch (error) {
       console.error("Failed to submit reflection:", error);
       setSubmitError(
         t("error_submitReflection") ||
           "Failed to submit reflection. Please try again."
-      ); 
+      );
       setIsSubmitting(false);
     }
-    
-    
   };
 
-  
   const formVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: {
@@ -210,9 +199,7 @@ ReflectionPhaseProps) {
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder={
-                              t("optional_feedback_placeholder")
-                            }
+                            placeholder={t("optional_feedback_placeholder")}
                             className="resize-none bg-white border-gray-300 focus-visible:ring-primary focus-visible:border-primary text-black placeholder:text-gray-700 min-h-[100px]"
                             disabled={isSubmitting}
                             {...field}
@@ -260,8 +247,6 @@ async function _sendReportEmail(report: ReflectionReportData) {
     if (!response.ok) {
       throw new Error("Failed to send email");
     }
-
-    console.log("Email sent successfully!");
   } catch (error) {
     console.error("Failed to send report email:", error);
   }

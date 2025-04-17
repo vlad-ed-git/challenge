@@ -16,7 +16,7 @@ export const PolicyAreaTitle: React.FC<{
 
   const accentColorClasses = getColorForPolicyArea(activeArea.id);
   const [textColor] = accentColorClasses.split(" ");
-  console.log("textColor", textColor);
+  
 
   return (
     <h3

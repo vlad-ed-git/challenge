@@ -28,7 +28,7 @@ export const getUserById = async (id: string): Promise<UserProfile | null> => {
                 return null;
             }
         } else {
-            console.log(`No user found with ID: ${id}`);
+
             return null;
         }
     } catch (error) {
@@ -70,12 +70,12 @@ const mapFirestoreDataToUserProfile = (id: string, data: DocumentData): UserProf
         {
             uid: id,
             age: age,
-            nationality:nationality,
+            nationality: nationality,
             occupation: occupation,
             educationalLevel: educationalLevel,
             displacementStatus: displacementStatus,
             currentCity: currentCity,
             currentCountry: currentCountry,
-       }
+        }
     );
 };

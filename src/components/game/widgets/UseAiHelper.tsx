@@ -125,7 +125,7 @@ export function useAiHelper({
     if (!aiResponseText) {
       return "";
     }
-    console.log("AI Response:", aiResponseText);
+
     return aiResponseText;
   };
 

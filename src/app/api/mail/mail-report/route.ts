@@ -125,7 +125,7 @@ function formatReportAsHtml(report: ReflectionReportData): string {
 
 
 // Function to send the email
-export async function sendReportEmail(report: ReflectionReportData,): Promise<void> { 
+export async function sendReportEmail(report: ReflectionReportData,): Promise<void> {
     try {
         const htmlBody = formatReportAsHtml(report);
         const receipientEmails = ["vkowelo@asu.edu",
@@ -155,7 +155,7 @@ export async function sendReportEmail(report: ReflectionReportData,): Promise<vo
 export async function POST(request: Request) {
     try {
         const report: ReflectionReportData = await request.json();
-        console.log("Received report data:", report);
+
 
         // Validate required fields
         if (!report.userId || !report.reflectionAnswers) {
