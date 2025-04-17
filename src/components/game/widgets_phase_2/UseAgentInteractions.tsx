@@ -1,101 +1,124 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AgentChatMessageProps } from "./AgentChat";
-import { PolicySelections } from "../types";
+import { formatSelectionsForPrompt, PolicySelections } from "../types";
 import { PolicyAreaId, PolicyOptionId } from "@/lib/types/policy_types";
 
-// Mock API responses
-const mockInitialAgentResponses = (selections: PolicySelections) => {
-  // In a real implementation, this would be an API call
-  return {
-    agent1: {
-      happiness: 0.6,
-      message:
-        "I see your initial policy choices. As a representative of the State, I have some concerns about the economic impact of these decisions.",
-    },
-    agent2: {
-      happiness: 0.7,
-      message:
-        "These policies could work for many citizens, but there are some groups who might be left behind.",
-    },
-    agent3: {
-      happiness: 0.5,
-      message:
-        "From a human rights perspective, I'd like to see stronger protections in several areas of your policy selections.",
-    },
-  };
-};
+// Api route for agent interactions
+enum AgentRole {
+  STATE = "state",
+  CITIZEN = "citizen",
+  HUMAN_RIGHTS = "human_rights",
+}
 
-// Mock API for policy changes
-const mockPolicyChangeResponses = (
-  selections: PolicySelections
-) => {
-  // In a real implementation, this would be an API call
-  // Here we're simulating different responses based on changes
-  return {
-    agent1: {
-      happiness: Math.random() * 0.5 + 0.5, // Random happiness between 0.5-1.0
-      message: "I'm evaluating your current policy framework from the State's perspective.",
-    },
-    agent2: {
-      happiness: Math.random() * 0.5 + 0.4, // Random happiness between 0.4-0.9
-      message:  "I'm analyzing how these policies might impact different citizen groups.",
-    },
-    agent3: {
-      happiness: Math.random() * 0.6 + 0.3, // Random happiness between 0.3-0.9
-      message: "I'm considering whether these policies adequately protect fundamental human rights.",
-    },
-  };
-};
+export interface AgentApiResponse {
+  happiness: number;
+  overallPovStatement: string;
+  specificResponse: string;
+  yourPackageSelections: string;
+}
 
-// Mock API for agent messages
-const mockAgentMessageResponse = (
-  message: string,
-  targetAgent: "agent1" | "agent2" | "agent3" | null
-) => {
-  // In a real implementation, this would be an API call
-  if (targetAgent) {
-    const responses = {
-      agent1:
-        "I appreciate your thoughts on state matters. Our primary concern is maintaining efficient governance while balancing the budget.",
-      agent2:
-        "Thank you for considering the citizens' perspective. People have diverse needs that must be addressed by these policies.",
-      agent3:
-        "Human rights must remain central to all policy decisions. I value your engagement on these important matters.",
-    };
+export interface AgentResponse {
+  agent1: AgentApiResponse;
+  agent2: AgentApiResponse;
+  agent3: AgentApiResponse;
+}
 
-    return {
-      [targetAgent]: {
-        message: responses[targetAgent],
-        happiness: Math.min(Math.random() * 0.3 + 0.7, 1.0), // Slight happiness boost
-      },
-    };
+const callAgentApi = async (
+  agentRole: AgentRole,
+  selections: PolicySelections,
+  agentSelections: string | null,
+  userMessage: string | null
+): Promise<AgentApiResponse | null> => {
+  const response = await fetch(`/api/agents/${agentRole}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      currentUserSelections: formatSelectionsForPrompt(selections),
+      agentPreferredSelections: agentSelections,
+      userMessage: userMessage ?? "",
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMsg = `API Error: ${response.statusText}`;
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.error || errorMsg;
+    } catch (parseError) {
+      console.error("Failed to parse error response:", parseError);
+    }
+    console.error("API Error:", errorMsg);
+    return null;
   }
 
-  // Generic response if no specific agent targeted
+  return (await response.json()) as AgentApiResponse;
+};
+
+const onPolicyChangeResponses = async (
+  selections: PolicySelections,
+  agent1Selections: string | null,
+  agent2Selections: string | null,
+  agent3Selections: string | null
+): Promise<AgentResponse | null> => {
+  // call all agents
+  const agent1Response = await callAgentApi(
+    AgentRole.STATE,
+    selections,
+    agent1Selections,
+    null
+  );
+  const agent2Response = await callAgentApi(
+    AgentRole.CITIZEN,
+    selections,
+    agent2Selections,
+    null
+  );
+  const agent3Response = await callAgentApi(
+    AgentRole.HUMAN_RIGHTS,
+    selections,
+    agent3Selections,
+    null
+  );
+  if (!agent1Response || !agent2Response || !agent3Response) {
+    return null;
+  }
+
   return {
-    agent1: {
-      message:
-        "As the State agent, I should note that we need to consider budgetary constraints in this discussion.",
-      happiness: 0.6,
-    },
-    agent2: {
-      message:
-        "Citizens have diverse needs. Your message raises important points about public impact.",
-      happiness: 0.7,
-    },
-    agent3: {
-      message:
-        "Human rights considerations should be at the forefront. Let's ensure we don't overlook them.",
-      happiness: 0.5,
-    },
+    agent1: agent1Response,
+    agent2: agent2Response,
+    agent3: agent3Response,
   };
+};
+
+const onAgentMessageResponse = async (
+  message: string,
+  targetAgent: AgentRole,
+  selections: PolicySelections,
+  agent1Selections: string | null,
+  agent2Selections: string | null,
+  agent3Selections: string | null
+): Promise<AgentApiResponse | null> => {
+  // call specific agent
+  const agentResponse = await callAgentApi(
+    targetAgent,
+    selections,
+    targetAgent === AgentRole.STATE
+      ? agent1Selections
+      : targetAgent === AgentRole.CITIZEN
+      ? agent2Selections
+      : agent3Selections,
+    message
+  );
+  if (!agentResponse) {
+    return null;
+  }
+  return agentResponse;
 };
 
 interface UseAgentInteractionsProps {
   selections: PolicySelections;
-  activeAreaId: PolicyAreaId | null;
-  currentCost: number;
-  budgetExceeded: boolean;
 }
 
 interface UseAgentInteractionsReturn {
@@ -104,178 +127,149 @@ interface UseAgentInteractionsReturn {
   isResponding: boolean;
   sendMessageToAgent: (message: string) => void;
   canEndDeliberations: boolean;
-  notifyAgentsOfAreaChange: (
+  alertAgentsOfSelectionsChange: (
     selections: Partial<Record<PolicyAreaId, PolicyOptionId>>
   ) => void;
 }
 
 export function useAgentInteractions({
   selections,
-  activeAreaId,
-  currentCost,
-  budgetExceeded,
 }: UseAgentInteractionsProps): UseAgentInteractionsReturn {
+  const [agent1Selections, setAgent1Selections] = useState<string | null>(null);
+  const [agent2Selections, setAgent2Selections] = useState<string | null>(null);
+  const [agent3Selections, setAgent3Selections] = useState<string | null>(null);
   const [agentMessages, setAgentMessages] = useState<AgentChatMessageProps[]>(
     []
   );
   const [agentHappinessScores, setAgentHappinessScores] = useState<number[]>([
-    0.5, 0.5, 0.5,
+    0.4, 0.4, 0.4,
   ]);
   const [isResponding, setIsResponding] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
-  const [isProcessingChange, setIsProcessingChange] = useState<boolean>(false);
   const prevSelectionsRef = useRef<PolicySelections>({});
 
-  // Initialize agent responses when component mounts
-  useEffect(() => {
-    const initializeAgents = async () => {
-      if (isInitialized) return;
+  // Helper function to check if selections have actually changed
+  const haveSelectionsChanged = (
+    oldSelections: PolicySelections,
+    newSelections: PolicySelections
+  ): boolean => {
+    const oldKeys = Object.keys(oldSelections);
+    const newKeys = Object.keys(newSelections);
 
-      setIsResponding(true);
-      const responses = mockInitialAgentResponses(selections);
+    if (oldKeys.length !== newKeys.length) return true;
 
-      const initialMessages: AgentChatMessageProps[] = [
-        {
-          sender: "agent1",
-          text: responses.agent1.message,
-          timestamp: new Date(),
-        },
-        {
-          sender: "agent2",
-          text: responses.agent2.message,
-          timestamp: new Date(Date.now() + 100),
-        },
-        {
-          sender: "agent3",
-          text: responses.agent3.message,
-          timestamp: new Date(Date.now() + 200),
-        },
-      ];
-
-      setAgentMessages(initialMessages);
-      setAgentHappinessScores([
-        responses.agent1.happiness,
-        responses.agent2.happiness,
-        responses.agent3.happiness,
-      ]);
-
-      setIsResponding(false);
-      setIsInitialized(true);
-      prevSelectionsRef.current = { ...selections };
-    };
-
-    initializeAgents();
-  }, [selections, isInitialized]);
-
-  // Monitor for policy selection changes
-  useEffect(() => {
-    // Skip if not yet initialized or already processing a change
-    if (!isInitialized || isProcessingChange) return;
-
-    // Check if selections have actually changed
-    const selectionsChanged = Object.keys({
-      ...selections,
-      ...prevSelectionsRef.current,
-    }).some(
-      (key) =>
-        selections[key as PolicyAreaId] !==
-        prevSelectionsRef.current[key as PolicyAreaId]
-    );
-
-    if (!selectionsChanged) return;
-
-    // Find the changed area
-    let changedAreaId: PolicyAreaId | null = null;
-    for (const key of Object.keys({
-      ...selections,
-      ...prevSelectionsRef.current,
-    })) {
-      const areaId = key as PolicyAreaId;
-      if (selections[areaId] !== prevSelectionsRef.current[areaId]) {
-        changedAreaId = areaId;
-        break;
+    for (const key of newKeys) {
+      if (
+        oldSelections[key as PolicyAreaId] !==
+        newSelections[key as PolicyAreaId]
+      ) {
+        return true;
       }
     }
 
-    // Process the policy change
-    setIsProcessingChange(true);
-    setIsResponding(true);
+    return false;
+  };
 
-    const responses = mockPolicyChangeResponses(selections);
+  const respondToSelectionChanges = useCallback(
+    async (newSelections: PolicySelections) => {
+      try {
+        // Return if already responding to avoid duplicate calls
+        if (isResponding) return;
 
-    const newMessages: AgentChatMessageProps[] = [
-      {
-        sender: "agent1",
-        text: responses.agent1.message,
-        timestamp: new Date(),
-      },
-      {
-        sender: "agent2",
-        text: responses.agent2.message,
-        timestamp: new Date(Date.now() + 100),
-      },
-      {
-        sender: "agent3",
-        text: responses.agent3.message,
-        timestamp: new Date(Date.now() + 200),
-      },
-    ];
+        // Only make API calls if selections have actually changed or this is initial call
+        if (
+          !isInitialized ||
+          haveSelectionsChanged(prevSelectionsRef.current, newSelections)
+        ) {
+          setIsResponding(true);
 
-    setAgentMessages((prev) => [...prev, ...newMessages]);
-    setAgentHappinessScores([
-      responses.agent1.happiness,
-      responses.agent2.happiness,
-      responses.agent3.happiness,
-    ]);
+          const responses = await onPolicyChangeResponses(
+            newSelections,
+            agent1Selections,
+            agent2Selections,
+            agent3Selections
+          );
 
-    // Update our reference to current selections
-    prevSelectionsRef.current = { ...selections };
+          if (!responses) {
+            console.error("Failed to get agent responses");
+            setIsResponding(false);
+            return;
+          }
 
-    setIsResponding(false);
-    setIsProcessingChange(false);
-  }, [selections, isInitialized, isProcessingChange]);
+          // Set agent selections
+          setAgent1Selections(responses.agent1.yourPackageSelections);
+          setAgent2Selections(responses.agent2.yourPackageSelections);
+          setAgent3Selections(responses.agent3.yourPackageSelections);
 
-  // Manual notification function for policy area changes (needed for initial notification)
-  const notifyAgentsOfAreaChange = useCallback(
-    (selections: Partial<Record<PolicyAreaId, PolicyOptionId>>) => {
-      setIsProcessingChange(true);
-      setIsResponding(true);
+          const initialMessages: AgentChatMessageProps[] = [
+            {
+              sender: "agent1",
+              text: responses.agent1.specificResponse,
+              timestamp: new Date(),
+            },
+            {
+              sender: "agent2",
+              text: responses.agent2.specificResponse,
+              timestamp: new Date(Date.now() + 100),
+            },
+            {
+              sender: "agent3",
+              text: responses.agent3.specificResponse,
+              timestamp: new Date(Date.now() + 200),
+            },
+          ];
 
-      const responses = mockPolicyChangeResponses(selections);
+          setAgentMessages(initialMessages);
+          setAgentHappinessScores([
+            responses.agent1.happiness,
+            responses.agent2.happiness,
+            responses.agent3.happiness,
+          ]);
 
-      const newMessages: AgentChatMessageProps[] = [
-        {
-          sender: "agent1",
-          text: responses.agent1.message,
-          timestamp: new Date(),
-        },
-        {
-          sender: "agent2",
-          text: responses.agent2.message,
-          timestamp: new Date(Date.now() + 100),
-        },
-        {
-          sender: "agent3",
-          text: responses.agent3.message,
-          timestamp: new Date(Date.now() + 200),
-        },
-      ];
+          // Update the stored previous selections
+          prevSelectionsRef.current = { ...newSelections };
+          setIsInitialized(true);
+        }
 
-      setAgentMessages((prev) => [...prev, ...newMessages]);
-      setAgentHappinessScores([
-        responses.agent1.happiness,
-        responses.agent2.happiness,
-        responses.agent3.happiness,
-      ]);
-
-      setIsResponding(false);
-      setIsProcessingChange(false);
+        setIsResponding(false);
+      } catch (error) {
+        console.error("Error with agent responses:", error);
+        setIsResponding(false);
+      }
     },
-    [selections]
+    [
+      isResponding,
+      agent1Selections,
+      agent2Selections,
+      agent3Selections,
+      isInitialized,
+    ]
   );
 
-  const sendMessageToAgent = useCallback(
+  // Initialize agents on mount only once
+  useEffect(() => {
+    if (!isInitialized && Object.keys(selections).length > 0) {
+      respondToSelectionChanges(selections);
+    }
+  }, [selections, respondToSelectionChanges, isInitialized]);
+
+  // Manual notification function with proper change detection
+  const alertAgentsOfSelectionChange = useCallback(
+    (newSelections: Partial<Record<PolicyAreaId, PolicyOptionId>>) => {
+      // Merge the new selections with existing ones
+      const updatedSelections = {
+        ...prevSelectionsRef.current,
+        ...newSelections,
+      };
+      respondToSelectionChanges(updatedSelections);
+    },
+    [respondToSelectionChanges]
+  );
+
+  const sendMessageToSpecificAgent = useCallback(
     async (message: string) => {
+      if (isResponding) return;
+
       setIsResponding(true);
 
       // Add user message to chat
@@ -289,78 +283,107 @@ export function useAgentInteractions({
       ]);
 
       // Parse message to see if it's directed at a specific agent
-      let targetAgent: "agent1" | "agent2" | "agent3" | null = null;
+      let targetAgent: AgentRole | null = null;
 
       if (message.toLowerCase().includes("@state")) {
-        targetAgent = "agent1";
+        targetAgent = AgentRole.STATE;
       } else if (message.toLowerCase().includes("@citizens")) {
-        targetAgent = "agent2";
+        targetAgent = AgentRole.CITIZEN;
       } else if (
         message.toLowerCase().includes("@rights") ||
         message.toLowerCase().includes("@human")
       ) {
-        targetAgent = "agent3";
+        targetAgent = AgentRole.HUMAN_RIGHTS;
       }
 
-      const responses = mockAgentMessageResponse(message, targetAgent);
-
-      // Build new messages based on which agents are responding
-      const newAgentMessages: AgentChatMessageProps[] = [];
-      const newHappinessScores = [...agentHappinessScores];
-
-      // Only add messages from agents that responded
-      Object.entries(responses).forEach(([agent, response], index) => {
-        if (response) {
-          newAgentMessages.push({
-            sender: agent as "agent1" | "agent2" | "agent3",
-            text: response.message,
-            timestamp: new Date(Date.now() + index * 100),
-          });
-
-          // Update happiness for this agent
-          const agentIndex =
-            agent === "agent1" ? 0 : agent === "agent2" ? 1 : 2;
-          newHappinessScores[agentIndex] = response.happiness;
-        }
-      });
-
-      // Slight delay for more natural-feeling conversation
-      setTimeout(() => {
-        setAgentMessages((prev) => [...prev, ...newAgentMessages]);
-        setAgentHappinessScores(newHappinessScores);
+      if (!targetAgent) {
         setIsResponding(false);
-      }, 1000);
+        return;
+      }
+
+      try {
+        const agentResponse = await onAgentMessageResponse(
+          message,
+          targetAgent,
+          prevSelectionsRef.current, // Use the stored selections
+          agent1Selections,
+          agent2Selections,
+          agent3Selections
+        );
+
+        if (!agentResponse) {
+          console.error("Failed to get agent response");
+          setIsResponding(false);
+          return;
+        }
+
+        // Update agent selections if they were null
+        if (agent1Selections === null && targetAgent === AgentRole.STATE) {
+          setAgent1Selections(agentResponse.yourPackageSelections);
+        }
+        if (agent2Selections === null && targetAgent === AgentRole.CITIZEN) {
+          setAgent2Selections(agentResponse.yourPackageSelections);
+        }
+        if (
+          agent3Selections === null &&
+          targetAgent === AgentRole.HUMAN_RIGHTS
+        ) {
+          setAgent3Selections(agentResponse.yourPackageSelections);
+        }
+
+        const newAgentMessage: AgentChatMessageProps = {
+          sender:
+            targetAgent === AgentRole.STATE
+              ? "agent1"
+              : targetAgent === AgentRole.CITIZEN
+              ? "agent2"
+              : "agent3",
+          text: agentResponse.specificResponse,
+          timestamp: new Date(),
+        };
+
+        // Update happiness score for the target agent
+        const newHappinessScores = [...agentHappinessScores];
+        const agentIndex =
+          targetAgent === AgentRole.STATE
+            ? 0
+            : targetAgent === AgentRole.CITIZEN
+            ? 1
+            : 2;
+        newHappinessScores[agentIndex] = agentResponse.happiness;
+
+        // Slight delay for more natural-feeling conversation
+        setTimeout(() => {
+          setAgentMessages((prev) => [...prev, newAgentMessage]);
+          setAgentHappinessScores(newHappinessScores);
+          setIsResponding(false);
+        }, 500);
+      } catch (error) {
+        console.error("Error sending message to agent:", error);
+        setIsResponding(false);
+      }
     },
-    [agentHappinessScores]
+    [
+      isResponding,
+      agentHappinessScores,
+      agent1Selections,
+      agent2Selections,
+      agent3Selections,
+    ]
   );
 
   // Determine if deliberations can end
-  const calculateCanEndDeliberations = useCallback(() => {
-    // Check if all agents are unhappy
-    const allAgentsUnhappy = agentHappinessScores.every((score) => score < 0.4);
-
-    // Cannot end if all agents are unhappy
-    if (allAgentsUnhappy) {
-      return false;
-    }
-
-    // Cannot end if budget is exceeded
-    if (budgetExceeded) {
-      return false;
-    }
-
-    // Check if all policy areas have selections
-    const hasAllSelections = Object.keys(selections).length >= 7; // All 7 policies must be selected
-
-    return hasAllSelections;
-  }, [agentHappinessScores, budgetExceeded, selections]);
+  const canEndDeliberations = useCallback(() => {
+    // Check if at least two agents are happy (score >= 0.5)
+    return agentHappinessScores.filter((score) => score >= 0.5).length >= 2;
+  }, [agentHappinessScores]);
 
   return {
     agentMessages,
     agentHappinessScores,
     isResponding,
-    sendMessageToAgent,
-    canEndDeliberations: calculateCanEndDeliberations(),
-    notifyAgentsOfAreaChange,
+    sendMessageToAgent: sendMessageToSpecificAgent,
+    canEndDeliberations: canEndDeliberations(),
+    alertAgentsOfSelectionsChange: alertAgentsOfSelectionChange,
   };
 }

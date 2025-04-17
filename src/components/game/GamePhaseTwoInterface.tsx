@@ -1,7 +1,7 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info } from "lucide-react";
 
@@ -23,7 +23,12 @@ import { useAgentInteractions } from "./widgets_phase_2/UseAgentInteractions";
 import { AgentChatDisplay, AgentChatInput } from "./widgets_phase_2/AgentChat";
 
 interface GamePhaseTwoProps {
-  onPhaseComplete: (selections: Required<PolicySelections>) => void;
+  onPhaseComplete: (selections: Required<PolicySelections>, 
+    agent1StateHappiness: number,
+    agent2CitizensHappiness: number,
+    agent3HumanRightsHappiness: number
+
+  ) => void;
   phaseOneSelections: Required<PolicySelections> | null;
 }
 
@@ -55,53 +60,77 @@ export function GamePhaseTwoInterface({
     isResponding,
     sendMessageToAgent,
     canEndDeliberations,
-    notifyAgentsOfAreaChange,
+    alertAgentsOfSelectionsChange,
   } = useAgentInteractions({
     selections,
-    activeAreaId,
-    currentCost,
-    budgetExceeded,
   });
 
+  // Only notify agents when the component mounts with initial selections
   useEffect(() => {
-    notifyAgentsOfAreaChange(selections);
-  }, []); 
+    if (Object.keys(selections).length > 0) {
+      alertAgentsOfSelectionsChange(selections);
+    }
+    // This effect should only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Notify agents whenever selections are updated
-  useEffect(() => {
-    notifyAgentsOfAreaChange(selections);
-  }, [selections]);
+  // Pre-calculate if all areas have the same option selected
+  const hasSameOptionForAllAreas = useMemo(() => {
+    return allAreasSelected ? allAreasSelectedWithSameOption() : false;
+  }, [allAreasSelected, allAreasSelectedWithSameOption]);
 
-  const handleAreaFocusWithTracking = (areaId: PolicyAreaId) => {
-    handleAreaFocus(areaId);
-  };
+  // Memoize the handler to prevent recreating it on every render
+  const handleAreaFocusWithTracking = useCallback(
+    (areaId: PolicyAreaId) => {
+      handleAreaFocus(areaId);
+    },
+    [handleAreaFocus]
+  );
 
-  const handleOptionSelection = (
-    areaId: PolicyAreaId,
-    optionId: PolicyOptionId
-  ) => {
-    handleSelectOption(areaId, optionId);
+  // Memoize the option selection handler
+  const handleOptionSelection = useCallback(
+    (areaId: PolicyAreaId, optionId: PolicyOptionId) => {
+      handleSelectOption(areaId, optionId);
+      // After selection changes, notify agents of the change (with debounce logic in useAgentInteractions)
+      alertAgentsOfSelectionsChange({ [areaId]: optionId });
+    },
+    [handleSelectOption, alertAgentsOfSelectionsChange]
+  );
 
-  };
+  // Compute final submission eligibility with all relevant dependencies
+  const canFinalSubmit = useMemo(() => {
+    return canSubmit && !hasSameOptionForAllAreas && canEndDeliberations;
+  }, [canSubmit, hasSameOptionForAllAreas, canEndDeliberations]);
 
-  // Consider both game state conditions and agent conditions for submission
-  const canFinalSubmit =
-    canSubmit && !allAreasSelectedWithSameOption() && canEndDeliberations;
-
-  const handleSubmit = () => {
+  // Handle form submission
+  const handleSubmit = useCallback(() => {
     if (allAreasSelected && canFinalSubmit) {
       const finalSelections = selections as Required<PolicySelections>;
-      onPhaseComplete(finalSelections);
+      onPhaseComplete(finalSelections,
+        agentHappinessScores[0],
+        agentHappinessScores[1],
+        agentHappinessScores[2]
+
+      );
     } else {
       console.warn("Submit attempt failed: Cannot end deliberations yet.", {
         allAreasSelected,
         budgetExceeded,
-        sameOptionUsedForAll: allAreasSelectedWithSameOption(),
-        allAgentsUnhappy: !canEndDeliberations,
+        sameOptionUsedForAll: hasSameOptionForAllAreas,
+        canEndDeliberations,
         canSubmit,
       });
     }
-  };
+  }, [
+    allAreasSelected,
+    canFinalSubmit,
+    selections,
+    onPhaseComplete,
+    budgetExceeded,
+    hasSameOptionForAllAreas,
+    canEndDeliberations,
+    canSubmit,
+  ]);
 
   const gridVariants = {
     hidden: { opacity: 0 },
@@ -137,15 +166,15 @@ export function GamePhaseTwoInterface({
         />
       </div>
 
-      <div className="flex-grow h-[500px] flex gap-3 overflow-hidden">
+      <div className="flex-grow flex gap-3 overflow-hidden max-h-[calc(100vh-300px)]">
         <div className="flex-grow flex flex-col items-center relative w-2/3 overflow-hidden">
           <div className="flex justify-center items-center">
             <div className="text-center max-w-xl px-4">
               <h2 className="text-lg font-semibold font-heading text-primary">
-                {t("phase1_instructionsTitle")}
+                {t("phase2_instructionsTitle")}
               </h2>
               <p className="text-sm text-white font-semibold">
-                {t("phase1_instructionsText")}
+                {t("phase2_instructionsText")}
               </p>
             </div>
           </div>
@@ -162,7 +191,7 @@ export function GamePhaseTwoInterface({
                   className="w-full max-w-4xl px-2"
                 >
                   <PolicyAreaTitle activeArea={activeAreaData} />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 h-[363px] overflow-y-auto custom-scrollbar">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-[calc(100vh-400px)] overflow-y-auto custom-scrollbar">
                     {activeAreaData.options.map((option) => {
                       const isSelected =
                         selections[activeAreaData.id] === option.id;
@@ -268,17 +297,15 @@ export function GamePhaseTwoInterface({
               {t("phase2_budgetExceededWarning")}
             </p>
           )}
+          {allAreasSelected && !budgetExceeded && hasSameOptionForAllAreas && (
+            <p className="text-xs text-red-700 mt-1 text-center w-[180px] flex items-center justify-center">
+              <AlertTriangle className="h-3 w-3 mr-1 flex-shrink-0" />{" "}
+              {t("phase2_allSameOptionsWarning")}
+            </p>
+          )}
           {allAreasSelected &&
             !budgetExceeded &&
-            allAreasSelectedWithSameOption() && (
-              <p className="text-xs text-red-700 mt-1 text-center w-[180px] flex items-center justify-center">
-                <AlertTriangle className="h-3 w-3 mr-1 flex-shrink-0" />{" "}
-                {t("phase2_allSameOptionsWarning")}
-              </p>
-            )}
-          {allAreasSelected &&
-            !budgetExceeded &&
-            !allAreasSelectedWithSameOption() &&
+            !hasSameOptionForAllAreas &&
             !canEndDeliberations && (
               <p className="text-xs text-red-700 mt-1 text-center w-[180px] flex items-center justify-center">
                 <AlertTriangle className="h-3 w-3 mr-1 flex-shrink-0" />{" "}

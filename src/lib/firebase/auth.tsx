@@ -15,18 +15,20 @@ import {
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { getUserById } from "./users/get_users";
 import { UserProfile } from "./users/profile";
+import { SignupFormValues } from "../form_models/register_schema";
+import { editProfile } from "./users/create_user";
 
 const usersCollection = "users";
 
 interface AuthContextType {
-    currentUserProfile: UserProfile | null;
-    loadingUserProfile: boolean;
-    signup: (email: string, password: string) => Promise<UserCredential>;
-    login: (email: string, password: string) => Promise<UserCredential>;
-    resetPassword: (email: string) => Promise<void>;
-    logout: () => Promise<void>;
-    refreshAuthProfile: () => Promise<void>;
-    emailVerified: boolean | undefined;
+  currentUserProfile: UserProfile | null;
+  loadingUserProfile: boolean;
+  signup: (values: SignupFormValues) => Promise<UserCredential>;
+  login: (email: string, password: string) => Promise<UserCredential>;
+  resetPassword: (email: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshAuthProfile: () => Promise<void>;
+  emailVerified: boolean | undefined;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,21 +53,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [emailVerified, setEmailVerified] = useState<boolean | undefined>(undefined);
 
     // Auth handlers with proper return types
-    const signup = async (email: string, password: string) => {
+    const signup = async (values : SignupFormValues) => {
         try {
-            console.log("Signing up with email:", email);
-            const userCredential: UserCredential =
-                await createUserWithEmailAndPassword(auth, email, password);
-            console.log("User signed up:", userCredential.user);
-            await createUserProfileWithCredentials(userCredential.user);
+        const { email, password } = values;
+        console.log("Signing up with email:", email);
+        const userCredential: UserCredential =
+          await createUserWithEmailAndPassword(auth, email, password);
+        console.log("User signed up:", userCredential.user);
+        await createUserProfileWithCredentials(userCredential.user);
             console.log("User profile created for:", userCredential.user.uid);
-            await sendEmailVerification(userCredential.user);
-            console.log("Email verification sent to:", email);
-            return userCredential;
-        } catch (error) {
-            console.log("Error signing up:", error);
-            throw error;
-        }
+            await editProfile(userCredential.user.uid, values);    
+        await sendEmailVerification(userCredential.user);
+        console.log("Email verification sent to:", email);
+        return userCredential;
+      } catch (error) {
+        console.log("Error signing up:", error);
+        throw error;
+      }
     };
 
     const login = async (email: string, password: string) => {

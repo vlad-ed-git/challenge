@@ -1,10 +1,11 @@
 "use client";
 
-import { useState  } from "react";
+import { useState } from "react";
 import { GameOnboarding } from "./OnBoarding";
 import { GamePhase, PolicySelections } from "./types";
 import { GamePhaseOneInterface } from "./GamePhaseOneInterface";
 import { GamePhaseTwoInterface } from "./GamePhaseTwoInterface";
+import { ReflectionPhase } from "./ReflectionPhase";
 
 export default function GamePlay() {
   const [gamePhase, setGamePhase] = useState<GamePhase>(GamePhase.ONBOARDING);
@@ -12,6 +13,11 @@ export default function GamePlay() {
     useState<Required<PolicySelections> | null>(null);
   const [phaseTwoSelections, setPhaseTwoSelections] =
     useState<Required<PolicySelections> | null>(null);
+  const [agent1StateHappiness, setAgent1StateHappiness] = useState<number>(0);
+  const [agent2CitizensHappiness, setAgent2CitizensHappiness] =
+    useState<number>(0);
+  const [agent3HumanRightsHappiness, setAgent3HumanRightsHappiness] =
+    useState<number>(0);
 
   const handleOnboardingComplete = () => {
     setGamePhase(GamePhase.PHASE_1_DECISION);
@@ -23,8 +29,16 @@ export default function GamePlay() {
     setGamePhase(GamePhase.PHASE_2_DIALOGUE);
   };
 
-  const handlePhaseTwoComplete = (selections: Required<PolicySelections>) => {
+  const handlePhaseTwoComplete = (
+    selections: Required<PolicySelections>,
+    agent1StateHappiness: number,
+    agent2CitizensHappiness: number,
+    agent3HumanRightsHappiness: number
+  ) => {
     setPhaseTwoSelections(selections);
+    setAgent1StateHappiness(agent1StateHappiness);
+    setAgent2CitizensHappiness(agent2CitizensHappiness);
+    setAgent3HumanRightsHappiness(agent3HumanRightsHappiness);
     setGamePhase(GamePhase.PHASE_3_REFLECTION);
   };
 
@@ -44,12 +58,19 @@ export default function GamePlay() {
         );
       case GamePhase.PHASE_2_DIALOGUE:
         return (
-          <GamePhaseTwoInterface onPhaseComplete={handlePhaseTwoComplete}
+          <GamePhaseTwoInterface
+            onPhaseComplete={handlePhaseTwoComplete}
             phaseOneSelections={phaseOneSelections}
           />
         );
       case GamePhase.PHASE_3_REFLECTION:
-        return <p>TODO</p>;
+        return <ReflectionPhase
+          phaseOneSelections={phaseOneSelections}
+          phaseTwoSelections={phaseTwoSelections}
+          agent1StateHappiness={agent1StateHappiness}
+          agent2CitizensHappiness={agent2CitizensHappiness}
+          agent3HumanRightsHappiness={agent3HumanRightsHappiness}
+        />;
       default:
         return <div>Error: Unknown game phase</div>;
     }

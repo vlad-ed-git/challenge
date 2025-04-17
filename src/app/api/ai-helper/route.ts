@@ -1,7 +1,7 @@
 
 
 import { NextResponse } from 'next/server';
-import { GAME_KNOWLEDGE_BASE } from '../ai/ai_helper_knowledge';
+import {  GAME_KNOWLEDGE_BASE_FOR_HELPER } from '../ai/ai_helper_knowledge';
 import { getHelpFromMyAi } from '../ai/send_ai_message';
 
 
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         }
 
 
-        const fullPrompt = `${GAME_KNOWLEDGE_BASE}\n\n${context}\n\nUser Question: ${messageText}\n\nAI Helper Response:`;
+        const fullPrompt = `${GAME_KNOWLEDGE_BASE_FOR_HELPER}\n\n${context}\n\nUser Question: ${messageText}\n\nAI Helper Response:`;
         console.log("API Route: Sending prompt to AI...");
 
 

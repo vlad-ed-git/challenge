@@ -84,7 +84,8 @@ export function RegisterForm() {
     setServerError(null);
     console.log("Signup form submitted with values:", values);
     try {
-      await auth.signup(values.email, values.password);
+      await auth.signup(values);
+
     } catch (error: any) {
       console.error("Signup failed:", error);
       const errorKey = mapAuthErrorToEnum(error.message || error.code);
