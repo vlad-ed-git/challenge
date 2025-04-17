@@ -20,10 +20,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text }) => {
           "rounded-lg px-3 py-1.5 max-w-[80%] text-sm",
           isUser
             ? "bg-primary text-primary-foreground"
-            : "bg-slate-100 text-slate-800 border border-slate-200"
+            : "bg-white text-black font-semibold border border-slate-200"
         )}
       >
-        {text}
+        {isUser
+          ? text
+          : // split text into paragraphs by .
+            text.split(".").map((paragraph, index) => (
+              <span key={index}>
+                {paragraph.trim()}
+                {index !== text.split(".").length - 1 && "."}
+                <br />
+                <br />
+              </span>
+            ))}
       </div>
     </div>
   );

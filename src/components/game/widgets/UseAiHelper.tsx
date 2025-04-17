@@ -3,8 +3,6 @@ import { useTranslations } from "next-intl";
 import { ChatMessageProps, AiHelperState, AiHelperHookReturn } from "./types";
 import { gamePolicyData } from "@/lib/types/policy_types";
 import { BUDGET_LIMIT } from "./UseGameState";
-import { send } from "process";
-import { getHelpFromMyAi } from "@/lib/firebase/ai/send_ai_message";
 
 export function useAiHelper({
   selections,
@@ -95,6 +93,42 @@ export function useAiHelper({
     t,
   ]);
 
+  const callAiHelperApi = async (
+    messageText: string,
+    contextString: string
+  ) => {
+    const response = await fetch("/api/ai-helper", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messageText: messageText,
+        context: contextString,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorMsg = `API Error: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMsg = errorData.error || errorMsg;
+      } catch (parseError) {
+        console.error("Failed to parse error response:", parseError);
+      }
+      console.error("API Error:", errorMsg);
+      return "";
+    }
+
+    const data = await response.json();
+    const aiResponseText = data.response;
+    if (!aiResponseText) {
+      return "";
+    }
+    console.log("AI Response:", aiResponseText);
+    return aiResponseText;
+  };
+
   const handleSendMessage = useCallback(
     async (messageText: string) => {
       if (!messageText.trim()) return;
@@ -109,14 +143,8 @@ export function useAiHelper({
       setChatMessages((prev) => [...prev, newUserMessage]);
       setIsAiHelperResponding(true);
 
-      let aiResponseText = await getHelpFromMyAi(
-        messageText,
-        context
-      );
-  
+      let aiResponseText = await callAiHelperApi(messageText, context);
 
-      
-     
       const aiResponse: ChatMessageProps = {
         sender: "ai_helper",
         text: aiResponseText,
