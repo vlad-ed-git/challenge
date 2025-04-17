@@ -101,6 +101,8 @@ ReflectionPhaseProps) {
             currentUserProfile.uid,
             reportData
       ); 
+
+      await _sendReportEmail(reportData);
       
 
       setSubmitSuccess(true);
@@ -243,4 +245,24 @@ ReflectionPhaseProps) {
       </Card>
     </motion.div>
   );
+}
+
+async function _sendReportEmail(report: ReflectionReportData) {
+  try {
+    const response = await fetch("/api/mail/mail-report", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(report),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to send email");
+    }
+
+    console.log("Email sent successfully!");
+  } catch (error) {
+    console.error("Failed to send report email:", error);
+  }
 }
