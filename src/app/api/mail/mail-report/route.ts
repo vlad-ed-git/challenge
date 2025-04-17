@@ -90,7 +90,9 @@ function formatReportAsHtml(report: ReflectionReportData): string {
         <div style="${styles.body}">
             <h1 style="${styles.h1}">CHALLENGE Game Reflection Report</h1>
             <p style="${styles.p}"><strong style="${styles.strong}">User ID:</strong> <code style="${styles.code}">${report.userId}</code></p>
-            <p style="${styles.p}"><strong style="${styles.strong}">Submitted At:</strong> ${submittedDate} via <a href="lou-challenge.vercel.app">Website Link</a></p>
+
+            <p style="${styles.p}"><strong style="${styles.strong}">Submitted At:</strong> ${submittedDate} via <a href="https://lou-challenge.vercel.app/">Website Link</a></p>
+
 
             <h2 style="${styles.h2}">User Profile Snapshot</h2>
             <ul style="${styles.ul}">
