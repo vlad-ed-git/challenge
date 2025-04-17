@@ -1,12 +1,12 @@
 
 
 import { NextResponse } from 'next/server';
-import {  GAME_KNOWLEDGE_BASE_FOR_HELPER } from '../ai/ai_helper_knowledge';
+import { GAME_KNOWLEDGE_BASE_FOR_HELPER } from '../ai/ai_helper_knowledge';
 import { getHelpFromMyAi } from '../ai/send_ai_message';
 
 
 export async function POST(request: Request) {
-    console.log("API Route /api/ai-helper received POST request.");
+
 
     try {
         const body = await request.json();
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
 
         const fullPrompt = `${GAME_KNOWLEDGE_BASE_FOR_HELPER}\n\n${context}\n\nUser Question: ${messageText}\n\nAI Helper Response:`;
-        console.log("API Route: Sending prompt to AI...");
+
 
 
         const response = await getHelpFromMyAi(
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         );
 
         const responseText = response;
-        console.log("API Route: Received AI response.");
+
 
 
         return NextResponse.json({ response: responseText });

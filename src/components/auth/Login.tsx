@@ -40,7 +40,6 @@ export function LoginForm() {
 
   useEffect(() => {
     if (!auth.loadingUserProfile && auth.currentUserProfile) {
-      console.log("User already logged in, redirecting...");
       router.replace("/game");
     }
   }, [auth.currentUserProfile, auth.loadingUserProfile, router]);

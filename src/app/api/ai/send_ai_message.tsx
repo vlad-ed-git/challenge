@@ -22,7 +22,7 @@ export const getHelpFromMyAi = async (
     });
 
     const responseText = response.text;
-    console.log("Received AI response:", responseText); // For debugging
+
     return responseText;
   } catch (error) {
     console.error("Error getting help from AI:", error);
