@@ -236,6 +236,7 @@ export function ReflectionPhase({
 
 async function _sendReportEmail(report: ReflectionReportData) {
   try {
+    console.log("Sending report email:");
     const response = await fetch("/api/mail/mail-report", {
       method: "POST",
       headers: {
@@ -244,6 +245,7 @@ async function _sendReportEmail(report: ReflectionReportData) {
       body: JSON.stringify(report),
     });
 
+    console.log("Email response:", response);
     if (!response.ok) {
       throw new Error("Failed to send email");
     }

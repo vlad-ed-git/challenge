@@ -55,8 +55,13 @@ const SiteHeader = () => {
       className="sticky top-0 z-50 w-full border-b border-white/10"
     >
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 md:px-6">
-        <div className="mr-4 flex items-center">
-          <span className="font-heading font-bold text-xl text-primary tracking-tighter">
+        <div className="mr-4 flex items-center cursor-pointer"
+          onClick={() => {
+            route.push("/");
+          }}
+          role="button"
+        >
+          <span className="font-heading font-bold text-xl text-primary tracking-tighter cursor-pointer">
             {t("app_name")}
           </span>
         </div>
