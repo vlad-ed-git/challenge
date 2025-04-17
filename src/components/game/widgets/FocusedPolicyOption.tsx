@@ -1,11 +1,8 @@
-"use client";
+"use client";;
 import React from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Coins } from "lucide-react";
-
-import { PolicyAreaId, PolicyOptionId } from "@/lib/types/policy_types";
-export type PolicySelections = Partial<Record<PolicyAreaId, PolicyOptionId>>;
 
 import { PolicyArea, PolicyOption } from "@/lib/types/policy_types";
 import { cn } from "@/lib/utils";

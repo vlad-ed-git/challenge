@@ -1,6 +1,6 @@
 import { PolicyAreaId, PolicyOptionId } from "@/lib/types/policy_types";
+import { PolicySelections } from "../types";
 
-export type PolicySelections = Partial<Record<PolicyAreaId, PolicyOptionId>>;
 
 export interface ChatMessageProps {
   sender: "user" | "ai_helper";

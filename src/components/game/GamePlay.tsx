@@ -1,23 +1,31 @@
 "use client";
-import { useState } from "react";
+
+import { useState  } from "react";
 import { GameOnboarding } from "./OnBoarding";
 import { GamePhase, PolicySelections } from "./types";
 import { GamePhaseOneInterface } from "./GamePhaseOneInterface";
+import { GamePhaseTwoInterface } from "./GamePhaseTwoInterface";
 
 export default function GamePlay() {
   const [gamePhase, setGamePhase] = useState<GamePhase>(GamePhase.ONBOARDING);
   const [phaseOneSelections, setPhaseOneSelections] =
     useState<Required<PolicySelections> | null>(null);
+  const [phaseTwoSelections, setPhaseTwoSelections] =
+    useState<Required<PolicySelections> | null>(null);
 
   const handleOnboardingComplete = () => {
-    console.log("Onboarding complete!");
     setGamePhase(GamePhase.PHASE_1_DECISION);
   };
 
   const handlePhaseOneComplete = (selections: Required<PolicySelections>) => {
-    console.log("Phase 1 complete!");
     setPhaseOneSelections(selections);
+    setPhaseTwoSelections(null);
     setGamePhase(GamePhase.PHASE_2_DIALOGUE);
+  };
+
+  const handlePhaseTwoComplete = (selections: Required<PolicySelections>) => {
+    setPhaseTwoSelections(selections);
+    setGamePhase(GamePhase.PHASE_3_REFLECTION);
   };
 
   const renderGameContent = () => {
@@ -35,7 +43,11 @@ export default function GamePlay() {
           <GamePhaseOneInterface onPhaseComplete={handlePhaseOneComplete} />
         );
       case GamePhase.PHASE_2_DIALOGUE:
-        return <p>TODO</p>;
+        return (
+          <GamePhaseTwoInterface onPhaseComplete={handlePhaseTwoComplete}
+            phaseOneSelections={phaseOneSelections}
+          />
+        );
       case GamePhase.PHASE_3_REFLECTION:
         return <p>TODO</p>;
       default:

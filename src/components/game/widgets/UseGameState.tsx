@@ -4,12 +4,19 @@ import {
   PolicyOptionId,
   gamePolicyData,
 } from "@/lib/types/policy_types";
-import { PolicySelections, GameStateHookReturn } from "./types";
+import {  GameStateHookReturn } from "./types";
+import { PolicySelections } from "../types";
 
 export const BUDGET_LIMIT = 14;
 
-export function useGameState(): GameStateHookReturn {
-  const [selections, setSelections] = useState<PolicySelections>({});
+export function useGameState({
+  initialSelections = {},
+}: {
+  initialSelections?: PolicySelections;
+}): GameStateHookReturn {
+  const [selections, setSelections] = useState<PolicySelections>(
+    initialSelections
+  );
   const [activeAreaId, setActiveAreaId] = useState<PolicyAreaId | null>(
     gamePolicyData.length > 0 ? gamePolicyData[0].id : null
   );
