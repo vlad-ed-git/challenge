@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Exo_2, Rajdhani } from "next/font/google";
+import { Orbitron, Titillium_Web } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
@@ -9,16 +9,17 @@ import SiteHeader from "@/components/home/Header";
 import SiteFooter from "@/components/home/Footer";
 import { AuthProvider } from "@/lib/firebase/auth";
 
-const exo2 = Exo_2({
+const orbitron = Orbitron({
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
-  variable: "--font-exo2",
+  weight: ["700", "900"],
+  variable: "--font-orbitron",
 });
 
-const rajdhani = Rajdhani({
+const titillium_web = Titillium_Web({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-rajdhani",
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-titillium-web",
 });
 
 export const metadata: Metadata = {
@@ -40,8 +41,8 @@ export default async function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          rajdhani.variable,
-          exo2.variable
+          titillium_web.variable,
+          orbitron.variable
         )}
       >
         <NextIntlClientProvider messages={messages}>
