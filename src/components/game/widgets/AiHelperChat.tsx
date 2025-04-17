@@ -1,18 +1,17 @@
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useEffect } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
 
 export interface ChatMessageProps {
   sender: "user" | "ai_helper";
-    text: string;
-    context: string;
+  text: string;
+  context: string;
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text }) => {
-    const isUser = sender === "user";
-    
+  const isUser = sender === "user";
 
   return (
     <div className={cn("flex mb-2", isUser ? "justify-end" : "justify-start")}>
@@ -48,16 +47,19 @@ export const ChatDisplay: React.FC<ChatDisplayProps> = ({ messages }) => {
   }, [messages]);
 
   return (
-    <div className="h-[320px] overflow-y-auto p-2 border border-slate-200 rounded-md bg-white custom-scrollbar">
+    <div className="h-full overflow-y-auto p-2 bg-white custom-scrollbar">
       {messages.length === 0 && (
         <p className="text-center text-sm text-slate-400 italic pt-4">
           {t("phase1_chatPlaceholder")}
         </p>
       )}
       {messages.map((msg, index) => (
-          <ChatMessage key={index} sender={msg.sender} text={msg.text}
-            context={msg.context}
-              />
+        <ChatMessage
+          key={index}
+          sender={msg.sender}
+          text={msg.text}
+          context={msg.context}
+        />
       ))}
       <div ref={messagesEndRef} />
     </div>
@@ -86,7 +88,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <form
       onSubmit={handleSend}
-      className="flex items-center gap-2 p-2 border-t border-slate-200 bg-slate-50"
+      className="flex items-center gap-2 p-2 bg-slate-50 border-t border-slate-200 flex-shrink-0"
     >
       <Input
         type="text"

@@ -17,7 +17,7 @@ export default function GamePlay() {
   const handlePhaseOneComplete = (selections: Required<PolicySelections>) => {
     console.log("Phase 1 complete!");
     setPhaseOneSelections(selections);
-    setGamePhase(GamePhase.PHASE_2_DIALOGUE); // Move to next phase
+    setGamePhase(GamePhase.PHASE_2_DIALOGUE);
   };
 
   const renderGameContent = () => {
@@ -43,9 +43,5 @@ export default function GamePlay() {
     }
   };
 
-  return (
-    <>
-      {renderGameContent()}
-    </>
-  );
+  return <>{renderGameContent()}</>;
 }

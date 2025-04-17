@@ -93,6 +93,7 @@
     "step3_title": "Meet the AI Agents",
     "step3_subtitle": "You will negotiate with these key perspectives.",
     "step3_agent1_name": "State Minister",
+    "phase1_totalBudgetLabel": "Total Budget",
     "step3_agent1_desc": "Represents governmental control, stability, and administrative efficiency.",
     "step3_agent2_name": "Citizen Representative",
     "step3_agent2_desc": "Voices majority citizen fears about limited resources and preserving the status quo.",

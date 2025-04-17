@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
@@ -8,15 +8,16 @@ export type PolicySelections = Partial<Record<PolicyAreaId, PolicyOptionId>>;
 
 import { PolicyArea } from "@/lib/types/policy_types";
 import { cn } from "@/lib/utils";
-import { getColorForPolicyArea } from "@/components/game/policy_colors";
+import { getColorForPolicyArea } from "@/components/game/widgets/policy_colors";
+import { useTranslations } from "next-intl";
 
 export const PolicyAreaBarItem: React.FC<{
   area: PolicyArea;
   isSelected: boolean;
   isActive: boolean;
   onClick: () => void;
-  t: (key: string) => string;
-}> = React.memo(({ area, isSelected, isActive, onClick, t }) => {
+}> = React.memo(({ area, isSelected, isActive, onClick, }) => {
+  const t = useTranslations("");
   const accentColorClasses = getColorForPolicyArea(area.id);
   const [textColor, borderColor, ringColor, bgColor] =
     accentColorClasses.split(" ");

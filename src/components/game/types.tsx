@@ -1,6 +1,5 @@
 import { PolicyAreaId, PolicyOptionId } from "@/lib/types/policy_types";
 
-// Using Partial allows the object to be initially empty or incomplete.
 export type PolicySelections = Partial<Record<PolicyAreaId, PolicyOptionId>>;
 
 export enum GamePhase {

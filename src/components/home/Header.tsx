@@ -8,8 +8,6 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 
 const SiteHeader = () => {
-
-  // get the pathname from the URL
   const pathname = usePathname();
   const isHomePage = pathname === "/";
 
@@ -38,7 +36,6 @@ const SiteHeader = () => {
     setIsLoading(false);
   };
 
-
   const onLogout = async () => {
     if (isLoading) {
       return;
@@ -59,7 +56,6 @@ const SiteHeader = () => {
     >
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 md:px-6">
         <div className="mr-4 flex items-center">
-          {/* Apply heading font */}
           <span className="font-heading font-bold text-xl text-primary tracking-tighter">
             {t("app_name")}
           </span>

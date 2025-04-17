@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import React from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,26 @@ export type PolicySelections = Partial<Record<PolicyAreaId, PolicyOptionId>>;
 
 import { PolicyArea, PolicyOption } from "@/lib/types/policy_types";
 import { cn } from "@/lib/utils";
-import { getColorForPolicyArea } from "@/components/game/policy_colors";
+import { getColorForPolicyArea } from "@/components/game/widgets/policy_colors";
+import { useTranslations } from "next-intl";
+
+export const PolicyAreaTitle: React.FC<{
+  activeArea: PolicyArea;
+}> = React.memo(({ activeArea }) => {
+  const t = useTranslations("");
+
+  const accentColorClasses = getColorForPolicyArea(activeArea.id);
+  const [textColor] = accentColorClasses.split(" ");
+  console.log("textColor", textColor);
+
+  return (
+    <h3
+      className={`text-xl font-semibold font-heading text-center mt-3 ${textColor}`}
+    >
+      {t(activeArea.nameKey)}
+    </h3>
+  );
+});
 
 export const FocusedPolicyOption: React.FC<{
   area: PolicyArea;
@@ -17,8 +36,8 @@ export const FocusedPolicyOption: React.FC<{
   isSelected: boolean;
   isDisabled: boolean;
   onSelect: () => void;
-  t: (key: string) => string;
-}> = React.memo(({ option, area, isSelected, isDisabled, onSelect, t }) => {
+}> = React.memo(({ option, area, isSelected, isDisabled, onSelect }) => {
+  const t = useTranslations("");
   const selectionClass = isSelected
     ? "border-primary bg-green-50 border-2 shadow-inner"
     : "border-white bg-white hover:border-slate-400 hover:shadow-sm";
@@ -37,19 +56,17 @@ export const FocusedPolicyOption: React.FC<{
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        `relative p-4 rounded-lg border transition-all h-full flex flex-col`,
+        `relative p-4 rounded-lg border transition-all flex flex-col`,
         selectionClass,
         disabledClass,
         isDisabled ? "" : "hover:shadow-md"
       )}
       onClick={!isDisabled ? onSelect : undefined}
-      >
-          
+    >
       <Badge
         variant="outline"
         className="absolute top-2 right-2 text-xs px-1.5 py-0.5 border-slate-300 text-black"
-          >
-              
+      >
         <Coins className="h-3 w-3 mr-1" /> {t("phase1_costLabel")}:{" "}
         <span className="font-bold">{option.cost}</span>
       </Badge>

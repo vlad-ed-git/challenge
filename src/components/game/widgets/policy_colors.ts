@@ -1,13 +1,13 @@
 import { PolicyAreaId } from "@/lib/types/policy_types";
 
 export const policyAreaAccentColors = [
-    'text-rose-600 border-rose-500 ring-rose-500 bg-rose-50', // ACCESS (Example: Reddish)
-    'text-sky-600 border-sky-500 ring-sky-500 bg-sky-50',   // LANGUAGE (Example: Blue)
-    'text-amber-600 border-amber-500 ring-amber-500 bg-amber-50', // TRAINING (Example: Orange/Yellow)
-    'text-emerald-600 border-emerald-500 ring-emerald-500 bg-emerald-50', // CURRICULUM (Example: Green)
-    'text-indigo-600 border-indigo-500 ring-indigo-500 bg-indigo-50', // SUPPORT (Example: Indigo)
-    'text-lime-600 border-lime-500 ring-lime-500 bg-lime-50',   // FINANCIAL (Example: Lime Green)
-    'text-fuchsia-600 border-fuchsia-500 ring-fuchsia-500 bg-fuchsia-50', // CERTIFICATION (Example: Fuchsia)
+    'text-cyan-600 border-cyan-400 ring-cyan-400 bg-cyan-50',
+    'text-orange-500 border-orange-400 ring-orange-400 bg-orange-50',
+    'text-lime-500 border-lime-400 ring-lime-400 bg-lime-50',
+    'text-fuchsia-600 border-fuchsia-400 ring-fuchsia-400 bg-fuchsia-50',
+    'text-blue-600 border-blue-400 ring-blue-400 bg-blue-50',
+    'text-yellow-500 border-yellow-400 ring-yellow-400 bg-yellow-50',
+    'text-emerald-500 border-emerald-400 ring-emerald-400 bg-emerald-50'
 ];
 
 export const getColorForPolicyArea = (policyArea: PolicyAreaId) => {
@@ -27,6 +27,6 @@ export const getColorForPolicyArea = (policyArea: PolicyAreaId) => {
         case PolicyAreaId.CERTIFICATION:
             return policyAreaAccentColors[6];
         default:
-            return policyAreaAccentColors[0]; // Default to first color if unknown
+            return policyAreaAccentColors[0];
     }
 }

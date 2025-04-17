@@ -187,7 +187,7 @@ export function GameOnboarding({ onOnboardingComplete }: GameOnboardingProps) {
               </Card>
           </motion.div>
        </AnimatePresence>
-       {/* Add a spacer div to maintain layout height during transitions */}
+       
         <div className="min-h-[450px]"></div>
     </div>
   );

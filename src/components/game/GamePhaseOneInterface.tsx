@@ -1,175 +1,54 @@
-"use client";;
-import { useState, useMemo, useCallback } from "react";
+"use client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Coins, Info } from "lucide-react";
-
-import { PolicyAreaId, PolicyOptionId } from "@/lib/types/policy_types";
-export type PolicySelections = Partial<Record<PolicyAreaId, PolicyOptionId>>;
+import { AlertTriangle, Info } from "lucide-react";
 
 import { gamePolicyData } from "@/lib/types/policy_types";
-import { AgentMeter } from "./AgentMeter";
-import { PolicyAreaBarItem } from "./PolicyAreaBarItem";
-import { FocusedPolicyOption } from "./FocusedPolicyOption";
-import { ChatDisplay, ChatInput, ChatMessageProps } from "./AiHelperChat";
+import { PolicySelections } from "./widgets/types";
+import { PolicyAreaBarItem } from "./widgets/PolicyAreaBarItem";
+import {
+  FocusedPolicyOption,
+  PolicyAreaTitle,
+} from "./widgets/FocusedPolicyOption";
+import { ChatDisplay, ChatInput } from "./widgets/AiHelperChat";
+import { BUDGET_LIMIT, useGameState } from "./widgets/UseGameState";
+import { useAiHelper } from "./widgets/UseAiHelper";
+import { BudgetDisplay } from "./widgets/BudgetDisplay";
+import { AgentDisplay } from "./widgets/AgentDisplay";
 
 interface GamePhaseOneProps {
   onPhaseComplete: (selections: Required<PolicySelections>) => void;
 }
 
-
 export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
   const t = useTranslations();
-  const [selections, setSelections] = useState<PolicySelections>({});
 
-  const [activeAreaId, setActiveAreaId] = useState<PolicyAreaId | null>(
-    gamePolicyData.length > 0 ? gamePolicyData[0].id : null
-  );
-  const budgetLimit = 14;
+  const {
+    selections,
+    activeAreaId,
+    activeAreaData,
+    currentCost,
+    remainingBudget,
+    budgetExceeded,
+    allAreasSelected,
+    allAreasSelectedWithSameOption,
+    canSubmit,
+    handleSelectOption,
+    handleAreaFocus,
+  } = useGameState();
 
-  const [chatMessages, setChatMessages] = useState<ChatMessageProps[]>([]);
-  const [isAiHelperResponding, setIsAiHelperResponding] = useState(false);
- 
-  const generateAiHelperContext = useCallback(() => {
-    let context = "Current Game State Context:\n\n";
-
-    // 1. Budget Status
-    context += `Budget: ${currentCost} / ${budgetLimit} units spent. Remaining: ${
-      budgetLimit - currentCost
-    }.\n`;
-    if (currentCost > budgetLimit) {
-      context += "WARNING: Current selections exceed budget limit!\n";
+  const { chatMessages, isAiHelperResponding, handleSendMessage } = useAiHelper(
+    {
+      selections,
+      activeAreaId,
+      currentCost,
+      budgetExceeded,
+      allAreasSelected,
+      allAreasSelectedWithSameOption,
+      canSubmit,
     }
-    context += "\n";
-
-    // 2. Current Selections Summary
-    context += "Current Policy Selections:\n";
-    let selectionCount = 0;
-    gamePolicyData.forEach((area) => {
-      const selectedOptionId = selections[area.id];
-      if (selectedOptionId) {
-        const option = area.options.find((opt) => opt.id === selectedOptionId);
-        context += `- ${area.id} (${t(area.nameKey)}): ${option?.id} (${t(
-          option?.titleKey || "N/A"
-        )}) - Cost: ${option?.cost}\n`;
-        selectionCount++;
-      } else {
-        context += `- ${area.id} (${t(area.nameKey)}): Not Selected Yet\n`;
-      }
-    });
-    context += `Total Areas Selected: ${selectionCount} / ${gamePolicyData.length}.\n\n`;
-
-    // 3. Currently Focused Area (if any)
-    if (activeAreaId) {
-      const activeArea = gamePolicyData.find((a) => a.id === activeAreaId);
-      if (activeArea) {
-        context += `User is currently viewing options for Policy Area: ${activeAreaId} (${t(
-          activeArea.nameKey
-        )}).\n`;
-
-        // Add details about the currently focused area's options
-        context += "Available options for this area:\n";
-        activeArea.options.forEach((option) => {
-          context += `- ${option.id} (${t(option.titleKey)}): Cost ${
-            option.cost
-          } - ${t(option.descriptionKey)}\n`;
-        });
-      } else {
-        context += "User is viewing an area, but data is missing for it.\n";
-      }
-    } else {
-      context +=
-        "User is not currently focused on a specific policy area's options.\n";
-    }
-
-    // 4. Game Progress Status
-    context += "\nGame Progress Status:\n";
-    context += `- Areas Selected: ${selectionCount}/${gamePolicyData.length}\n`;
-    context += `- Budget Status: ${currentCost}/${budgetLimit} (${
-      budgetExceeded ? "EXCEEDED" : "Within limit"
-    })\n`;
-    context += `- Can Submit: ${canSubmit ? "Yes" : "No"}\n`;
-
-    if (!canSubmit) {
-      context += "Reasons for inability to submit:\n";
-      if (!allAreasSelected)
-        context += "- Not all policy areas have been selected yet\n";
-      if (budgetExceeded) context += "- Budget limit has been exceeded\n";
-      if (allAreasSelectedWithSameOption())
-        context += "- All areas have the same option selected (need variety)\n";
-    }
-
-  return context;
-}, [selections, activeAreaId, currentCost, budgetLimit]);
-  
-  const handleSendMessage = useCallback(async (messageText: string) => {
-    if (!messageText.trim()) return;
-    const context = generateAiHelperContext();
-    console.log("AI Helper Context:", context);
-    const newUserMessage: ChatMessageProps = {
-      sender: "user",
-      text: messageText,
-      context: context,
-    };
-    setChatMessages((prev) => [...prev, newUserMessage]);
-    setIsAiHelperResponding(true);
-
-    // TODO
-    console.log("User asked AI Helper:", messageText);
-    await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate delay
-    const aiResponse: ChatMessageProps = {
-      sender: "ai_helper",
-      text: `I received your question about: "${messageText}". In Phase II, you can discuss this with the policy agents.`,
-      context: ""
-    };
-    setChatMessages((prev) => [...prev, aiResponse]);
-    setIsAiHelperResponding(false);
-  }, []);
-
-  const handleSelectOption = useCallback(
-    (areaId: PolicyAreaId, optionId: PolicyOptionId) => {
-      setSelections((prev) => ({
-        ...prev,
-        [areaId]: optionId,
-      }));
-    },
-    []
   );
-
-  const handleAreaFocus = useCallback((areaId: PolicyAreaId) => {
-    setActiveAreaId(areaId);
-  }, []);
-
-  const activeAreaData = useMemo(() => {
-    if (!activeAreaId) return null;
-    return gamePolicyData.find((a) => a.id === activeAreaId);
-  }, [activeAreaId]);
-
-  const currentCost = useMemo(() => {
-    return Object.entries(selections).reduce((total, [areaId, optionId]) => {
-      if (!optionId) return total;
-      const area = gamePolicyData.find((a) => a.id === areaId);
-      const option = area?.options.find((o) => o.id === optionId);
-      return total + (option?.cost ?? 0);
-    }, 0);
-  }, [selections]);
-
-  const remainingBudget = budgetLimit - currentCost;
-  const allAreasSelected = gamePolicyData.every(
-    (area) => !!selections[area.id]
-  );
-
-  const allAreasSelectedWithSameOption = () => {
-    // checks if all the selections have the exact same option set
-    const firstSelection = Object.values(selections)[0];
-    return Object.values(selections).every(
-      (optionId) => optionId === firstSelection
-    );
-  };
-  const budgetExceeded = currentCost > budgetLimit;
-  const canSubmit =
-    allAreasSelected && !allAreasSelectedWithSameOption() && !budgetExceeded;
 
   const handleSubmit = () => {
     if (canSubmit) {
@@ -179,7 +58,7 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
       console.warn("Submit attempt failed: Conditions not met.", {
         allAreasSelected,
         budgetExceeded,
-        allAreasSelectedWithSameOption,
+        allAreasSelectedWithSameOption: allAreasSelectedWithSameOption(),
       });
     }
   };
@@ -191,6 +70,7 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
       transition: { staggerChildren: 0.05, delayChildren: 0.2 },
     },
   };
+
   const itemFadeUp = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -202,60 +82,24 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex justify-between items-start mb-3 md:mb-4 px-1 md:px-2">
-        {/* AI AGENTS */}
-        <div className="flex flex-col items-start space-y-1">
-          <span className="text-xs font-semibold text-white uppercase tracking-wider ml-1">
-            {t("phase1_agentHappiness")}
-          </span>
-          <div className="flex justify-start items-center space-x-3 p-2 rounded-lg bg-slate-50 border border-slate-200">
-            <AgentMeter name={t("step3_agent1_name")} happiness={100} />
-            <AgentMeter name={t("step3_agent2_name")} happiness={100} />
-            <AgentMeter name={t("step3_agent3_name")} happiness={100} />
-          </div>
-        </div>
+      <div className="flex justify-between items-start mb-3 px-2">
+        <AgentDisplay
+          agent1StateHappiness={100}
+          agent2CitizensHappiness={100}
+          agent3HumanRightsHappiness={100}
+        />
 
-        {/* BUDGET */}
-        <div className="flex flex-col items-end space-y-1">
-          <span className="text-xs font-semibold text-white uppercase tracking-wider mr-1">
-            {t("phase1_budgetStatusTitle")}
-          </span>
-          <div className="flex flex-col items-end p-2 rounded-lg bg-slate-50 border border-slate-200 min-w-[180px]">
-            <div className="flex items-center space-x-1 text-black">
-              <Coins className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm">{t("phase1_totalSpent")}</span>
-              <span
-                className={`font-semibold text-base ${
-                  budgetExceeded ? "text-red-600" : "text-slate-800"
-                }`}
-              >
-                {currentCost}
-              </span>
-            </div>
-            <div className="flex items-center space-x-1 text-black">
-              <Coins className="h-4 w-4 text-green-500" />
-              <span className="text-sm">{t("phase1_remaining")}</span>
-              <span
-                className={`font-semibold text-base ${
-                  remainingBudget < 0 ? "text-red-600" : "text-green-700"
-                }`}
-              >
-                {remainingBudget}
-              </span>
-            </div>
-            {budgetExceeded && (
-              <p className="text-xs text-red-600 flex items-center mt-1">
-                <AlertTriangle className="h-3 w-3 mr-1" />{" "}
-                {t("phase1_budgetExceededWarning")}
-              </p>
-            )}
-          </div>
-        </div>
+        <BudgetDisplay
+          currentCost={currentCost}
+          remainingBudget={remainingBudget}
+          budgetExceeded={budgetExceeded}
+          budgetLimit={BUDGET_LIMIT}
+        />
       </div>
 
-      <div className="flex-grow flex gap-3 md:gap-4">
-        <div className="flex-grow flex flex-col items-center justify-center relative w-2/3">
-          <div className="flex justify-center items-center mb-3 md:mb-4">
+      <div className="flex-grow h-[500px] flex gap-3  overflow-hidden">
+        <div className="flex-grow flex flex-col items-center relative w-2/3 overflow-hidden">
+          <div className="flex justify-center items-center">
             <div className="text-center max-w-xl px-4">
               <h2 className="text-lg font-semibold font-heading text-primary">
                 {t("phase1_instructionsTitle")}
@@ -266,7 +110,7 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
             </div>
           </div>
 
-          <div className="flex-grow flex flex-col items-center justify-center relative mb-3 md:mb-4">
+          <div className="flex-grow flex flex-col items-center justify-center relative w-full overflow-y-auto custom-scrollbar px-2">
             <AnimatePresence mode="wait">
               {activeAreaData ? (
                 <motion.div
@@ -277,10 +121,8 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
                   transition={{ duration: 0.3 }}
                   className="w-full max-w-4xl px-2"
                 >
-                  <h3 className="text-xl font-semibold font-heading text-primary text-center mb-3">
-                    {t(activeAreaData.nameKey)}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                  <PolicyAreaTitle activeArea={activeAreaData} />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 h-[363px] overflow-y-auto custom-scrollbar">
                     {activeAreaData.options.map((option) => {
                       const isSelected =
                         selections[activeAreaData.id] === option.id;
@@ -291,8 +133,7 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
                         : 0;
                       const costIfSelected =
                         currentCost - currentSelectionCost + option.cost;
-                      const isDisabled =
-                        !isSelected && costIfSelected > budgetLimit;
+                      const isDisabled = !isSelected && costIfSelected > 14;
 
                       return (
                         <FocusedPolicyOption
@@ -304,7 +145,6 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
                           onSelect={() =>
                             handleSelectOption(activeAreaData.id, option.id)
                           }
-                          t={t}
                         />
                       );
                     })}
@@ -328,8 +168,11 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
           </div>
         </div>
 
-        <div className="w-1/3 flex flex-col border border-slate-200 rounded-lg bg-white shadow-sm flex-shrink-0">
-          <ChatDisplay messages={chatMessages} />
+        <div className="w-1/3 flex flex-col border border-slate-200 rounded-lg bg-white shadow-sm flex-shrink-0 overflow-hidden">
+          <div className="flex-grow overflow-hidden">
+            <ChatDisplay messages={chatMessages} />
+          </div>
+
           <ChatInput
             onSendMessage={handleSendMessage}
             isSending={isAiHelperResponding}
@@ -337,51 +180,48 @@ export function GamePhaseOneInterface({ onPhaseComplete }: GamePhaseOneProps) {
         </div>
       </div>
 
-      <div className="flex justify-center items-center mt-3 md:mt-4 px-1 md:px-2">
-        <motion.div
-          variants={gridVariants}
-          initial="hidden"
-          animate="visible"
-          className="mt-auto flex items-center justify-between gap-3 md:gap-4 p-2 rounded-lg bg-slate-50 border border-slate-200"
-        >
-          <div className="grid grid-cols-7 gap-1 md:gap-2 flex-grow">
-            {gamePolicyData.map((area, index) => (
-              <motion.div key={area.id} variants={itemFadeUp}>
-                <PolicyAreaBarItem
-                  area={area}
-                  isSelected={!!selections[area.id]}
-                  isActive={activeAreaId === area.id}
-                  onClick={() => handleAreaFocus(area.id)}
-                  t={t}
-                />
-              </motion.div>
-            ))}
-          </div>
-          <div className="flex flex-col items-center">
-            <Button
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-slate-300 disabled:text-white disabled:cursor-not-allowed px-6 py-3 h-full"
-              size="lg"
-              title={!canSubmit ? t("phase1_allAreasSelectedPrompt") : ""}
-            >
-              {t("phase1_confirmSelectionsButton")}
-            </Button>
+      <motion.div
+        variants={gridVariants}
+        initial="hidden"
+        animate="visible"
+        className="mt-2 flex items-center justify-between gap-3 md:gap-4 p-2 rounded-lg bg-slate-50 border border-slate-200 w-full "
+      >
+        <div className="grid grid-cols-7 gap-1 md:gap-2 flex-grow">
+          {gamePolicyData.map((area) => (
+            <motion.div key={area.id} variants={itemFadeUp}>
+              <PolicyAreaBarItem
+                area={area}
+                isSelected={!!selections[area.id]}
+                isActive={activeAreaId === area.id}
+                onClick={() => handleAreaFocus(area.id)}
+              />
+            </motion.div>
+          ))}
+        </div>
+        <div className="flex flex-col items-center">
+          <Button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-slate-300 disabled:text-white disabled:cursor-not-allowed px-6 py-3 h-full"
+            size="lg"
+            title={!canSubmit ? t("phase1_allAreasSelectedPrompt") : ""}
+          >
+            {t("phase1_confirmSelectionsButton")}
+          </Button>
 
-            {!canSubmit && !allAreasSelected && (
-              <p className="text-xs text-orange-700 mt-1 text-center w-[180px]">
-                {t("phase1_allAreasSelectedPrompt")}
-              </p>
-            )}
-            {!canSubmit && allAreasSelected && budgetExceeded && (
-              <p className="text-xs text-red-700 mt-1 text-center w-[180px] flex items-center justify-center">
-                <AlertTriangle className="h-3 w-3 mr-1 flex-shrink-0" />{" "}
-                {t("phase1_budgetExceededWarning")}
-              </p>
-            )}
-          </div>
-        </motion.div>
-      </div>
+          {!canSubmit && !allAreasSelected && (
+            <p className="text-xs text-orange-700 mt-1 text-center w-[180px]">
+              {t("phase1_allAreasSelectedPrompt")}
+            </p>
+          )}
+          {!canSubmit && allAreasSelected && budgetExceeded && (
+            <p className="text-xs text-red-700 mt-1 text-center w-[180px] flex items-center justify-center">
+              <AlertTriangle className="h-3 w-3 mr-1 flex-shrink-0" />{" "}
+              {t("phase1_budgetExceededWarning")}
+            </p>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 }
