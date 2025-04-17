@@ -1,13 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GameOnboarding } from "./OnBoarding";
 import { GamePhase, PolicySelections } from "./types";
 import { GamePhaseOneInterface } from "./GamePhaseOneInterface";
 import { GamePhaseTwoInterface } from "./GamePhaseTwoInterface";
 import { ReflectionPhase } from "./ReflectionPhase";
+import { useAuth } from "@/lib/firebase/auth";
+import { useRouter } from "next/navigation";
 
 export default function GamePlay() {
+  const { currentUserProfile, loadingUserProfile } = useAuth();
+
+  const route = useRouter();
+  useEffect(() => {
+    if (loadingUserProfile) return;
+    if (!currentUserProfile) {
+      // Redirect to login or show an error message
+      route.push("/login");
+      return;
+    }
+  }, [currentUserProfile, loadingUserProfile])
+  
+  
+
   const [gamePhase, setGamePhase] = useState<GamePhase>(GamePhase.ONBOARDING);
   const [phaseOneSelections, setPhaseOneSelections] =
     useState<Required<PolicySelections> | null>(null);
@@ -76,5 +92,7 @@ export default function GamePlay() {
     }
   };
 
-  return <>{renderGameContent()}</>;
+  return  loadingUserProfile || !currentUserProfile ? (
+      <div>Loading...</div>
+    ) : <>{renderGameContent()}</>;
 }
