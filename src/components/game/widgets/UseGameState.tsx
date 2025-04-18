@@ -3,6 +3,7 @@ import {
   PolicyAreaId,
   PolicyOptionId,
   gamePolicyData,
+  policyAreaIdToString,
 } from "@/lib/types/policy_types";
 import {  GameStateHookReturn } from "./types";
 import { PolicySelections } from "../types";
@@ -13,7 +14,8 @@ export function useGameState({
   initialSelections = {},
 }: {
   initialSelections?: PolicySelections;
-}): GameStateHookReturn {
+  }): GameStateHookReturn {
+  
   const [selections, setSelections] = useState<PolicySelections>(
     initialSelections
   );
@@ -25,6 +27,12 @@ export function useGameState({
     if (!activeAreaId) return null;
     return gamePolicyData.find((a) => a.id === activeAreaId);
   }, [activeAreaId]);
+
+  const userIsCurrentlyViewingPolicy =
+    useMemo(() => {
+      if (!activeAreaId) return  "";
+      return policyAreaIdToString(activeAreaId);
+    }, [activeAreaId]);
 
   const currentCost = useMemo(() => {
     return Object.entries(selections).reduce((total, [areaId, optionId]) => {
@@ -73,6 +81,7 @@ export function useGameState({
   }, []);
 
   return {
+    userIsCurrentlyViewingPolicy,
     selections,
     activeAreaId,
     activeAreaData,

@@ -7,6 +7,29 @@ export enum PolicyAreaId {
     SUPPORT = 'support',
     FINANCIAL = 'financial',
     CERTIFICATION = 'certification'
+
+
+}
+
+export const policyAreaIdToString = (policyAreaId: PolicyAreaId): string => {
+    switch (policyAreaId) {
+        case PolicyAreaId.ACCESS:
+            return 'Access to Education';
+        case PolicyAreaId.LANGUAGE:
+            return 'Language Instruction';
+        case PolicyAreaId.TRAINING:
+            return 'Teacher Training';
+        case PolicyAreaId.CURRICULUM:
+            return 'Curriculum Adaptation';
+        case PolicyAreaId.SUPPORT:
+            return 'Psychosocial Support';
+        case PolicyAreaId.FINANCIAL:
+            return 'Financial Support';
+        case PolicyAreaId.CERTIFICATION:
+            return 'Certification/Accreditation';
+        default:
+            return '';
+    }
 }
 
 // Enum for the 3 options within each area

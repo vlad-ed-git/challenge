@@ -22,6 +22,7 @@ export async function POST(request: Request, props: { params: Promise<{ agentRol
     }
 
     const {
+        userIsCurrentlyViewingPolicy,
         currentUserSelections,
         agentPreferredSelections,
         userMessage
@@ -33,6 +34,7 @@ export async function POST(request: Request, props: { params: Promise<{ agentRol
 
     try {
         const fullPrompt = generateAgentInteractionPrompt(
+            userIsCurrentlyViewingPolicy,
             agentRole,
             currentUserSelections,
             agentPreferredSelections,

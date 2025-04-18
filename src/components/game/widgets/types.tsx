@@ -9,6 +9,7 @@ export interface ChatMessageProps {
 }
 
 export interface GameStateHookReturn {
+  userIsCurrentlyViewingPolicy  : string;
   selections: PolicySelections;
   activeAreaId: PolicyAreaId | null;
   activeAreaData: ReturnType<

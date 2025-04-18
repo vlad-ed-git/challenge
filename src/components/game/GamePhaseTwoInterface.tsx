@@ -40,6 +40,7 @@ export function GamePhaseTwoInterface({
 
   const {
     selections,
+    userIsCurrentlyViewingPolicy,
     activeAreaId,
     activeAreaData,
     currentCost,
@@ -63,11 +64,12 @@ export function GamePhaseTwoInterface({
     alertAgentsOfSelectionsChange,
   } = useAgentInteractions({
     selections,
+    userIsCurrentlyViewingPolicy,
   });
 
   useEffect(() => {
     if (Object.keys(selections).length > 0) {
-      alertAgentsOfSelectionsChange(selections);
+      alertAgentsOfSelectionsChange(selections, userIsCurrentlyViewingPolicy);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -86,7 +88,10 @@ export function GamePhaseTwoInterface({
   const handleOptionSelection = useCallback(
     (areaId: PolicyAreaId, optionId: PolicyOptionId) => {
       handleSelectOption(areaId, optionId);
-      alertAgentsOfSelectionsChange({ [areaId]: optionId });
+      alertAgentsOfSelectionsChange(
+        { [areaId]: optionId },
+        userIsCurrentlyViewingPolicy
+      );
     },
     [handleSelectOption, alertAgentsOfSelectionsChange]
   );

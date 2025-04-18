@@ -31,7 +31,8 @@ const callAgentApi = debounce(
     agentRole: AgentRole,
     selections: PolicySelections,
     agentSelections: string | null,
-    userMessage: string | null
+    userMessage: string | null,
+    userIsCurrentlyViewingPolicy: string
   ): Promise<AgentApiResponse | null> => {
     try {
       const response = await fetch(`/api/agents/${agentRole}`, {
@@ -64,22 +65,24 @@ const callAgentApi = debounce(
       return null;
     }
   },
-  1500, // 1.5 seconds debounce
+  1500 // 1.5 seconds debounce
 );
 
 // cache response for given selections so we don't call the api again
 const agentResponseCache: Record<string, AgentResponse> = {};
 const getCachedAgentResponse = (
-  selections: PolicySelections
+  selections: PolicySelections,
+  userIsCurrentlyViewingPolicy: string
 ): AgentResponse | null => {
-  const cacheKey = JSON.stringify(selections);
+  const cacheKey = `${JSON.stringify(selections)}-${userIsCurrentlyViewingPolicy}`;
   return agentResponseCache[cacheKey] || null;
 };
 const setCachedAgentResponse = (
   selections: PolicySelections,
-  response: AgentResponse
+  response: AgentResponse,
+  userIsCurrentlyViewingPolicy: string
 ): void => {
-  const cacheKey = JSON.stringify(selections);
+  const cacheKey = `${JSON.stringify(selections)}-${userIsCurrentlyViewingPolicy}`;
   agentResponseCache[cacheKey] = response;
 };
 
@@ -87,10 +90,14 @@ const onPolicyChangeResponses = async (
   selections: PolicySelections,
   agent1Selections: string | null,
   agent2Selections: string | null,
-  agent3Selections: string | null
+  agent3Selections: string | null,
+  userIsCurrentlyViewingPolicy: string
 ): Promise<AgentResponse | null> => {
   // Check cache first
-  const cachedResponse = getCachedAgentResponse(selections);
+  const cachedResponse = getCachedAgentResponse(
+    selections,
+    userIsCurrentlyViewingPolicy
+  );
   if (cachedResponse) {
     return cachedResponse;
   }
@@ -99,19 +106,22 @@ const onPolicyChangeResponses = async (
     AgentRole.STATE,
     selections,
     agent1Selections,
-    null
+    null,
+    userIsCurrentlyViewingPolicy
   );
   const agent2Response = await callAgentApi(
     AgentRole.CITIZEN,
     selections,
     agent2Selections,
-    null
+    null,
+    userIsCurrentlyViewingPolicy
   );
   const agent3Response = await callAgentApi(
     AgentRole.HUMAN_RIGHTS,
     selections,
     agent3Selections,
-    null
+    null,
+    userIsCurrentlyViewingPolicy
   );
   if (!agent1Response || !agent2Response || !agent3Response) {
     return null;
@@ -124,7 +134,7 @@ const onPolicyChangeResponses = async (
   };
 
   // Cache the response
-  setCachedAgentResponse(selections, response);
+  setCachedAgentResponse(selections, response, userIsCurrentlyViewingPolicy);
   return response;
 };
 
@@ -132,17 +142,19 @@ const onPolicyChangeResponses = async (
 const agentMessageResponseCache: Record<string, AgentApiResponse> = {};
 const getCachedAgentMessageResponse = (
   message: string,
-  targetAgent: AgentRole
+  targetAgent: AgentRole,
+  userIsCurrentlyViewingPolicy: string
 ): AgentApiResponse | null => {
-  const cacheKey = `${targetAgent}-${message}`;
+  const cacheKey = `${targetAgent}-${message}-${userIsCurrentlyViewingPolicy}`;
   return agentMessageResponseCache[cacheKey] || null;
 };
 const setCachedAgentMessageResponse = (
   message: string,
   targetAgent: AgentRole,
-  response: AgentApiResponse
+  response: AgentApiResponse,
+  userIsCurrentlyViewingPolicy: string
 ): void => {
-  const cacheKey = `${targetAgent}-${message}`;
+  const cacheKey = `${targetAgent}-${message}-${userIsCurrentlyViewingPolicy}`;
   agentMessageResponseCache[cacheKey] = response;
 };
 
@@ -152,10 +164,15 @@ const onAgentMessageResponse = async (
   selections: PolicySelections,
   agent1Selections: string | null,
   agent2Selections: string | null,
-  agent3Selections: string | null
+  agent3Selections: string | null,
+  userIsCurrentlyViewingPolicy: string
 ): Promise<AgentApiResponse | null> => {
   // Check cache first
-  const cachedResponse = getCachedAgentMessageResponse(message, targetAgent);
+  const cachedResponse = getCachedAgentMessageResponse(
+    message,
+    targetAgent,
+    userIsCurrentlyViewingPolicy
+  );
   if (cachedResponse) {
     return cachedResponse;
   }
@@ -168,18 +185,25 @@ const onAgentMessageResponse = async (
       : targetAgent === AgentRole.CITIZEN
         ? agent2Selections
         : agent3Selections,
-    message
+    message,
+    userIsCurrentlyViewingPolicy
   );
   if (!agentResponse) {
     return null;
   }
   // Cache the response
-  setCachedAgentMessageResponse(message, targetAgent, agentResponse);
+  setCachedAgentMessageResponse(
+    message,
+    targetAgent,
+    agentResponse,
+    userIsCurrentlyViewingPolicy
+  );
   return agentResponse;
 };
 
 interface UseAgentInteractionsProps {
   selections: PolicySelections;
+  userIsCurrentlyViewingPolicy: string;
 }
 
 interface UseAgentInteractionsReturn {
@@ -189,12 +213,14 @@ interface UseAgentInteractionsReturn {
   sendMessageToAgent: (message: string) => void;
   canEndDeliberations: boolean;
   alertAgentsOfSelectionsChange: (
-    selections: Partial<Record<PolicyAreaId, PolicyOptionId>>
+    selections: Partial<Record<PolicyAreaId, PolicyOptionId>>,
+    userIsCurrentlyViewingPolicy: string
   ) => void;
 }
 
 export function useAgentInteractions({
   selections,
+  userIsCurrentlyViewingPolicy,
 }: UseAgentInteractionsProps): UseAgentInteractionsReturn {
   const [agent1Selections, setAgent1Selections] = useState<string | null>(null);
   const [agent2Selections, setAgent2Selections] = useState<string | null>(null);
@@ -232,7 +258,10 @@ export function useAgentInteractions({
   };
 
   const respondToSelectionChanges = useCallback(
-    async (newSelections: PolicySelections) => {
+    async (
+      newSelections: PolicySelections,
+      userIsCurrentlyViewingPolicy: string
+    ) => {
       try {
         // Return if already responding to avoid duplicate calls
         if (isResponding) return;
@@ -248,7 +277,8 @@ export function useAgentInteractions({
             newSelections,
             agent1Selections,
             agent2Selections,
-            agent3Selections
+            agent3Selections,
+            userIsCurrentlyViewingPolicy
           );
 
           if (!responses) {
@@ -267,7 +297,7 @@ export function useAgentInteractions({
               sender: "agent1",
               text: responses.agent1.specificResponse,
               timestamp: new Date(),
-              agentHappinessScore:responses.agent1.happiness,
+              agentHappinessScore: responses.agent1.happiness,
             },
             {
               sender: "agent2",
@@ -313,19 +343,26 @@ export function useAgentInteractions({
   // Initialize agents on mount only once
   useEffect(() => {
     if (!isInitialized && Object.keys(selections).length > 0) {
-      respondToSelectionChanges(selections);
+      respondToSelectionChanges(selections, userIsCurrentlyViewingPolicy);
     }
   }, [selections, respondToSelectionChanges, isInitialized]);
 
   // Manual notification function with proper change detection
   const alertAgentsOfSelectionChange = useCallback(
-    (newSelections: Partial<Record<PolicyAreaId, PolicyOptionId>>) => {
+    (
+      newSelections: Partial<Record<PolicyAreaId, PolicyOptionId>>,
+
+      userIsCurrentlyViewingPolicy: string
+    ) => {
       // Merge the new selections with existing ones
       const updatedSelections = {
         ...prevSelectionsRef.current,
         ...newSelections,
       };
-      respondToSelectionChanges(updatedSelections);
+      respondToSelectionChanges(
+        updatedSelections,
+        userIsCurrentlyViewingPolicy
+      );
     },
     [respondToSelectionChanges]
   );
@@ -373,7 +410,8 @@ export function useAgentInteractions({
           prevSelectionsRef.current, // Use the stored selections
           agent1Selections,
           agent2Selections,
-          agent3Selections
+          agent3Selections,
+          userIsCurrentlyViewingPolicy
         );
 
         if (!agentResponse) {
