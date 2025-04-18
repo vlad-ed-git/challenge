@@ -64,7 +64,7 @@ const callAgentApi = debounce(
       return null;
     }
   },
-  2000, // 2 seconds debounce
+  1500, // 1.5 seconds debounce
 );
 
 // cache response for given selections so we don't call the api again
@@ -423,7 +423,7 @@ export function useAgentInteractions({
           setAgentMessages((prev) => [...prev, newAgentMessage]);
           setAgentHappinessScores(newHappinessScores);
           setIsResponding(false);
-        }, 500);
+        }, 200);
       } catch (error) {
         console.error("Error sending message to agent:", error);
         setIsResponding(false);
