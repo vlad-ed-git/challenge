@@ -21,8 +21,12 @@ import {
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { getUserById } from "./users/get_users";
 import { UserProfile } from "./users/profile";
-import { SignupFormValues } from "../form_models/register_schema";
+import {
+  ProfileFormValues,
+  SignupFormValues,
+} from "../form_models/register_schema";
 import { editProfile } from "./users/create_user";
+import { get } from "http";
 
 const usersCollection = "users";
 
@@ -59,21 +63,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
     undefined
   );
 
+  
+  const createAndUpdateUserProfileAfterSignUp = async (
+    userCredential: UserCredential,
+    profileValues: ProfileFormValues
+  ) => {
+
+    try {
+      await createUserProfileWithCredentials(userCredential.user);
+      await editProfile(userCredential.user.uid, profileValues);
+      await sendEmailVerification(userCredential.user);
+      const profile = await getUserById(userCredential.user.uid); // reset
+      setCurrentUserProfile(profile);
+      refreshAuthProfile();
+    } catch (error) {
+      console.error("Error creating user profile:", error);
+    }
+  };
+
+  
   // Auth handlers with proper return types
   const signup = async (values: SignupFormValues) => {
     try {
+
       const { email, password } = values;
 
-      const userCredential: UserCredential =
-        await createUserWithEmailAndPassword(auth, email, password);
+      // omit password and confirmPassword from values
+      const { password: _, confirmPassword: __, ...profileValuesOnly } = values;
+      const profileValues = profileValuesOnly as ProfileFormValues;
 
-      await createUserProfileWithCredentials(userCredential.user);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-      await editProfile(userCredential.user.uid, values);
-      await sendEmailVerification(userCredential.user);
+      await createAndUpdateUserProfileAfterSignUp(
+        userCredential,
+        profileValues as ProfileFormValues
+      );
 
+      console.log("signed up");
       return userCredential;
     } catch (error) {
+      console.error("Error signing up:", error);
       throw error;
     }
   };
@@ -112,19 +145,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
+        console.log("onAuthStateChanged called");
         setLoadingUserProfile(true);
         if (!user) {
           setCurrentUserProfile(null);
           return;
         }
         setEmailVerified(user.emailVerified);
-        const userProfile = await getUserById(user.uid);
+        const userProfile = await getUserById(user.uid); 
         if (userProfile) {
           setCurrentUserProfile(userProfile);
         } else {
           // If the user profile doesn't exist, create it & log out so user can re-login
           await createUserProfileWithCredentials(user);
-          await logout();
+        
         }
       } catch (err) {
         console.error("onAuthStateChanged:", err);
@@ -173,3 +207,20 @@ const createUserProfileWithCredentials = async (user: User) => {
     console.error("Error creating user profile:", error);
   }
 };
+
+export async function createUserProfile(
+  user: User,
+  profileValues: ProfileFormValues
+) {
+  try {
+    const registeredOn = Timestamp.now();
+    await setDoc(doc(db, usersCollection, user.uid), {
+      ...profileValues,
+      uid: user.uid,
+      email: user.email,
+      registeredOn: registeredOn,
+    });
+  } catch (error) {
+    console.error("Error creating user profile:", error);
+  }
+}

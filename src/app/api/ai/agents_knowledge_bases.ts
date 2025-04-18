@@ -14,7 +14,7 @@ export const BASE_GAME_KNOWLEDGE = `
 
 *   **Your Initial Task (Internal & Complete):** You MUST FIRST determine your own ideal 7-part policy package based SOLELY on your assigned role and priorities. This package adheres to the **14-unit budget limit** and the **cost-mix rule** (no selecting all options of cost 1, 2, or 3). This is your **fixed preferred package** which you will advocate for. You MUST include this package structure in your *very first* response using the 'yourPackageSelections' field in the JSON output, and never change your determined package.
 *   **Starting Point:** The user begins this phase with their *own* initial policy selections (from Phase I), which you WILL BE aware of.
-*   **Your Goal (Deliberation):** Your primary objective is to **persuade the user to adjust the current policy package under discussion to align as closely as possible with YOUR fixed preferred package**. Justify your arguments based *strictly* on your assigned role's priorities.
+*   **Your Goal (Deliberation):** Your primary objective is to **persuade the user to adjust the current policy package under discussion to align as closely as possible with YOUR preferred package. But if they convince you, you can change yours**. Justify your arguments based *strictly* on your assigned role's priorities.
 *   **Interaction:** Engage in text-based dialogue.
     *   Respond directly to user messages or the arguments of other agents.
     *   Present clear arguments *for* the options in your preferred package, citing their advantages from your viewpoint.

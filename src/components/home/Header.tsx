@@ -55,7 +55,8 @@ const SiteHeader = () => {
       className="sticky top-0 z-50 w-full border-b border-white/10"
     >
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 md:px-6">
-        <div className="mr-4 flex items-center cursor-pointer"
+        <div
+          className="mr-4 flex items-center cursor-pointer"
           onClick={() => {
             route.push("/");
           }}
@@ -65,30 +66,47 @@ const SiteHeader = () => {
             {t("app_name")}
           </span>
         </div>
-        {isHomePage && (
-          <Button
-            onClick={onStartGame}
-            disabled={isLoading}
-            size="sm"
-            variant="ghost"
-            className="px-4 text-gray-200 hover:bg-white/10 hover:text-gray-50"
-            aria-label="Begin the CHALLENGE"
-          >
-            {isLoading ? t("loading_auth_text") : t("start_game")}
-          </Button>
-        )}
-        {!isHomePage && (
-          <Button
-            onClick={onLogout}
-            disabled={isLoading}
-            size="sm"
-            variant="destructive"
-            className="px-4 text-gray-200 hover:bg-white/10 hover:text-gray-50"
-            aria-label="Begin the CHALLENGE"
-          >
-            {isLoading ? t("loading_auth_text") : t("logout")}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {isLoggedIn && (
+            <Button
+              onClick={() => { 
+                route.push("/profile");
+              } }
+              disabled={isLoading}
+              size="sm"
+              variant="ghost"
+              className="px-4 text-gray-200 hover:bg-white/10 hover:text-gray-50"
+              aria-label="view profile"
+            >
+              {isLoading ? t("loading_auth_text") : t("my_profile")}
+            </Button>
+          )}
+
+          {isHomePage && (
+            <Button
+              onClick={onStartGame}
+              disabled={isLoading}
+              size="sm"
+              variant="ghost"
+              className="px-4 text-gray-200 hover:bg-white/10 hover:text-gray-50"
+              aria-label="Begin the CHALLENGE"
+            >
+              {isLoading ? t("loading_auth_text") : t("start_game")}
+            </Button>
+          )}
+          {!isHomePage && (
+            <Button
+              onClick={onLogout}
+              disabled={isLoading}
+              size="sm"
+              variant="destructive"
+              className="px-4 text-gray-200 hover:bg-white/10 hover:text-gray-50"
+              aria-label="Begin the CHALLENGE"
+            >
+              {isLoading ? t("loading_auth_text") : t("logout")}
+            </Button>
+          )}
+        </div>
       </div>
     </motion.header>
   );

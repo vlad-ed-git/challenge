@@ -252,5 +252,13 @@
   "optional_feedback_placeholder": "Share any suggestions or comments here...",
   "phase2_allAgentsUnhappyWarning": "All agents are unhappy with the current policy package. Consider revising your selections to better align with their needs.",
   "phase2_endDeliberationsButton": "End Deliberations",
-"phase2_waitingForAgentResponse" : "Agents are deliberating"
+"phase2_waitingForAgentResponse" : "Agents are deliberating",
+  "profile_title": "Update Your Profile",
+  "profile_subtitle": "Keep your information current.",
+  "profile_emailCannotChange": "Email address cannot be changed.",
+  "profile_updateButton": "Save Profile Changes",
+  "profile_loadingButton": "Saving...",
+  "profile_updateSuccess": "Profile updated successfully!",
+  "profile_updateError": "Failed to update profile. Please try again.",
+  "my_profile": "My Profile"
 }

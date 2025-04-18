@@ -421,14 +421,14 @@ export function useAgentInteractions({
         }
 
         // Update agent selections if they were null
-        if (agent1Selections === null && targetAgent === AgentRole.STATE) {
+        if ( targetAgent === AgentRole.STATE) {
           setAgent1Selections(agentResponse.yourPackageSelections);
         }
-        if (agent2Selections === null && targetAgent === AgentRole.CITIZEN) {
+        if (targetAgent === AgentRole.CITIZEN) {
           setAgent2Selections(agentResponse.yourPackageSelections);
         }
         if (
-          agent3Selections === null &&
+         
           targetAgent === AgentRole.HUMAN_RIGHTS
         ) {
           setAgent3Selections(agentResponse.yourPackageSelections);

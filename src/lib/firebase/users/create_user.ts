@@ -1,8 +1,6 @@
-"use client";
-
-import { SignupSchema } from "@/lib/form_models/register_schema";
+"use client";;
+import { ProfileFormValues } from "@/lib/form_models/register_schema";
 import { doc, setDoc } from "firebase/firestore";
-import { z } from "zod";
 import { db } from "../config";
 import { usersCollection } from "./profile";
 
@@ -13,7 +11,7 @@ interface IEditProfileResult {
 }
 const editProfile = async (
     profileId: string,
-    values: z.infer<typeof SignupSchema>): Promise<IEditProfileResult> => {
+    values: ProfileFormValues): Promise<IEditProfileResult> => {
 
     try {
         // update the time period
