@@ -19,6 +19,7 @@ const getRoleInstructions = (role: AgentRole): string => {
 
 
 export const generateAgentInteractionPrompt = (
+    userIsCurrentlyViewingPolicy: string,
     agentRole: AgentRole,
     userSelectionsText: string,
     agentPrefText: string | null,
@@ -34,6 +35,10 @@ ${agentPrefText ? `You have decided these to be your selections: ${agentPrefText
 
 User's Current Policies:
 ${userSelectionsText}`;
+    
+    if (userIsCurrentlyViewingPolicy) {
+        taskDescription += `\n\nUser is currently viewing & deliberating on policy: ${userIsCurrentlyViewingPolicy}`;
+    }
 
 
 
