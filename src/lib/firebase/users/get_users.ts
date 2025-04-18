@@ -76,6 +76,7 @@ const mapFirestoreDataToUserProfile = (id: string, data: DocumentData): UserProf
             displacementStatus: displacementStatus,
             currentCity: currentCity,
             currentCountry: currentCountry,
+            email: (data.email as string | undefined | null) ?? '',
         }
     );
 };

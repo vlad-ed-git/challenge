@@ -57,3 +57,53 @@ export const SignupSchema = z.object({
 
 
 export type SignupFormValues = z.infer<typeof SignupSchema>;
+
+
+
+
+export const ProfileSchema = z.object({
+    email: z.string()
+        .min(1, { message: "emailRequired" })
+        .email({ message: "emailInvalid" }),
+    
+    age: z.coerce.number({
+        required_error: "ageRequired",
+        invalid_type_error: "ageInvalidType"
+    })
+        .int({ message: "ageMustBeInteger" })
+        .min(16, { message: "ageMin" }),
+    nationality: z.string()
+        .min(1, { message: "nationalityRequired" }),
+    occupation: z.string()
+        .min(1, { message: "occupationRequired" }),
+    educationalLevel: z.enum(educationalLevelEnumValues, {
+        required_error: "educationRequired",
+        invalid_type_error: "educationRequired",
+    }),
+    hasDisplacementExperience: z.boolean({
+        required_error: "displacementRequired",
+        invalid_type_error: "displacementRequired",
+    }),
+    displacementNarrative: z.string().optional(),
+    currentCity: z.string()
+        .min(1, { message: "cityRequired" }),
+    currentCountry: z.string()
+        .min(1, { message: "countryRequired" }),
+})
+    
+    .refine((data) => {
+
+        if (data.hasDisplacementExperience === true) {
+            return data.displacementNarrative && data.displacementNarrative.trim().length > 0;
+        }
+
+        return true;
+    }, {
+        message: "narrativeRequired",
+        path: ["displacementNarrative"],
+    });
+
+
+
+
+export type ProfileFormValues = z.infer<typeof ProfileSchema>;

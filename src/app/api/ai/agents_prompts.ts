@@ -31,7 +31,7 @@ export const generateAgentInteractionPrompt = (
     let taskDescription = `
 **Task:** You are the ${agentRole} agent. Analyze the user's current policy selections compared to your preferred package. Then, respond to the user.
 Your Preferred Policies:
-${agentPrefText ? `You have decided these to be your selections: ${agentPrefText} Your goal now is to persuade the user to align with you` : "You need to generate your preferred policies based on your role's priorities."}
+${agentPrefText ? `You have decided these to be your selections: ${agentPrefText} Your goal now is to persuade the user to align with you unless they convince you to change (do not easily budge)` : "You need to generate your preferred policies based on your role's priorities."}
 
 User's Current Policies:
 ${userSelectionsText}`;
@@ -53,7 +53,7 @@ ${userSelectionsText}`;
 1.  'happiness': A numerical score (0.0-1.0) reflecting your satisfaction with the USER'S CURRENT selections.
 2.  'overallPovStatement': A brief, persuasive statement (max 4 lines) summarizing your view of the user's package from your role's perspective. Aim to influence the user towards your preferred options (Keep it concise, max 1-3 sentences / 240 characters).
 3.  'specificResponse': ${userMessage ? "A direct response to the user's last message." : "A comment on the user's current selections or the latest change, if known."} (Keep it concise, max 1-3 sentences / 240 characters).
-4.   'yourPackageSelections' : ${agentPrefText ? "Do not change them." : "Specify your preferred policy selections based on your role's priorities. (Keep it concise)"}
+4.   'yourPackageSelections' : ${agentPrefText ? "Do not change them easily. User must convince you" : "Specify your preferred policy selections based on your role's priorities. (Keep it concise)"}
 
 Output ONLY the single, minified, valid JSON object matching the AgentInteractionOutputSchema. Adhere strictly to your persona and constraints. Think step-by-step internally based on the base game knowledge and your specific role instructions before generating the JSON.
 `;
