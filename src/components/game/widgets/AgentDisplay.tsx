@@ -1,17 +1,20 @@
 import { useTranslations } from "next-intl";
 import { AgentMeter } from "./AgentMeter";
 import { Building, Users, HeartHandshake } from "lucide-react";
+import { AgentIsThinking } from "./AgentIsThinking";
 
 interface AgentDisplayProps {
   agent1StateHappiness: number;
   agent2CitizensHappiness: number;
   agent3HumanRightsHappiness: number;
+  isDeliberating: boolean;
 }
 
 export function AgentDisplay({
   agent1StateHappiness,
   agent2CitizensHappiness,
   agent3HumanRightsHappiness,
+  isDeliberating,
 }: AgentDisplayProps) {
   const t = useTranslations("");
 
@@ -37,27 +40,28 @@ export function AgentDisplay({
   ];
 
   return (
-    <div className="flex flex-col items-start space-y-1">
-      <span className="text-xs font-bold text-white uppercase tracking-wider ml-1 mb-0.5">
+    <div className="flex items-start justify-center space-x-4">
+      <span className="text-xs font-bold text-white uppercase tracking-wider ml-1 mb-0.5 drop-shadow-sm">
         {t("phase1_agentHappiness")}
       </span>
 
-      <div className="flex justify-start items-stretch space-x-2 p-2 rounded-lg bg-white/90 backdrop-blur-sm border border-slate-300 shadow-md">
-        {agents.map((agent, index) => (
-          <div
-            key={index}
-            className={`flex items-center space-x-2 px-3 py-1 rounded ${agent.colorClass}`}
-          >
-            <agent.icon
-              className={`h-4 w-4 flex-shrink-0 ${
-                agent.colorClass.split(" ")[0]
-              }`}
-              aria-hidden="true"
-            />
+      {agents.map((agent, index) => (
+        <div
+          key={index}
+          className={`flex items-center space-x-4 px-6 py-2 rounded-md transition-all duration-300 ${agent.colorClass} hover:scale-105`}
+        >
+          <agent.icon
+            className={`h-5 w-5 flex-shrink-0 ${
+              agent.colorClass.split(" ")[0]
+            }`}
+            aria-hidden="true"
+          />
+          {isDeliberating && <AgentIsThinking />}
+          {!isDeliberating && (
             <AgentMeter name={t(agent.nameKey)} happiness={agent.happiness} />
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

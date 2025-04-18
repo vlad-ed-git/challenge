@@ -198,6 +198,7 @@
   "policyArea_certification_option3_advantage": "Provides a pathway for migrants to have their previous education recognized while addressing any gaps or discrepancies through additional training or assessments.",
   "policyArea_certification_option3_disadvantage": "Requires additional resources and coordination to design and implement tailored programs, potentially leading to logistical challenges and variations in educational outcomes.",
   "phase1_instructionsTitle": "Phase 1: Individual Reflection & Choice",
+  "phase2_waitingForAgentResponse" : "Agents are deliberating. Please wait...",
   "phase1_instructionsText": "Take a few minutes to review the 7 policy areas below. Click on an area to see the detailed options. Choose one option for each area, staying within the 14-unit budget.\nNOTE: You cannot choose the same option for all areas.",
   "phase2_instructionsTitle": "Phase 2: Deliberation",
   "phase2_instructionsText": "Think about the choices you made in Phase 1. You will now deliberate with the AI agents to finalize the policy package. Ideally you should be able to reach a consensus.",
@@ -214,8 +215,8 @@
   "phase1_remaining": "Remaining:",
   "phase2_endDeliberationsButton": "End Deliberations",
   "phase2_cannotEndDeliberationsPrompt": "Many of the agents are unhappy. Please adjust your choices to gain approval of at least two agents.",
-  "phase2_chatPlaceholder": "...",
-  "address_agent_hint": "@rights or @citizen or @state",
+
+  "address_agent_hint": "@rights or @citizen or @state to address the agent directly",
   "phase2_chatSend": "Send",
   "phase2_chatSending": "Sending...",
   "phase1_budgetExceededWarning": "Budget Exceeded!",
