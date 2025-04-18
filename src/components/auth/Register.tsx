@@ -47,16 +47,19 @@ import { EducationalLevel } from "@/lib/firebase/users/profile";
 
 export function RegisterForm() {
   const t = useTranslations();
-  const auth = useAuth();
+  
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!auth.loadingUserProfile && auth.currentUserProfile) {
-      router.replace("/game");
-    }
-  }, [auth.currentUserProfile, auth.loadingUserProfile, router]);
-
+  
+    const { currentUserProfile, loadingUserProfile, signup } = useAuth();
+    useEffect(() => {
+      if(loadingUserProfile) return;
+      if (currentUserProfile) {
+        router.replace("/game");
+      }
+    }, [currentUserProfile, loadingUserProfile]);
+  
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(SignupSchema),
     defaultValues: {
@@ -84,7 +87,7 @@ export function RegisterForm() {
     setServerError(null);
 
     try {
-      await auth.signup(values);
+      await signup(values);
     } catch (error: any) {
       console.error("Signup failed:", error);
       const errorKey = mapAuthErrorToEnum(error.message || error.code);

@@ -34,15 +34,17 @@ import { LoginFormValues, LoginSchema } from "@/lib/form_models/login_schema";
 export function LoginForm() {
   const t = useTranslations();
 
-  const auth = useAuth();
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
+
+  const { currentUserProfile, loadingUserProfile, login } = useAuth();
   useEffect(() => {
-    if (!auth.loadingUserProfile && auth.currentUserProfile) {
+    if(loadingUserProfile) return;
+    if (currentUserProfile) {
       router.replace("/game");
     }
-  }, [auth.currentUserProfile, auth.loadingUserProfile, router]);
+  }, [currentUserProfile, loadingUserProfile]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(LoginSchema),
@@ -57,7 +59,7 @@ export function LoginForm() {
   const onSubmit = async (values: LoginFormValues) => {
     setServerError(null);
     try {
-      await auth.login(values.email, values.password);
+      await login(values.email, values.password);
     } catch (error: any) {
       const errorKey = mapAuthErrorToEnum(error.message || error.code);
       setServerError(t(errorKey) || t("errors.unknownError"));

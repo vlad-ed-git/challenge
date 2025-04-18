@@ -22,53 +22,60 @@ export interface AgentChatMessageProps {
   sender: "user" | "agent1" | "agent2" | "agent3";
   text: string;
   timestamp: Date;
+  agentHappinessScore: number;
 }
 
 export const AgentChatMessage: React.FC<AgentChatMessageProps> = ({
   sender,
   text,
+  agentHappinessScore,
 }) => {
   const isUser = sender === "user";
   const agentColor = isUser ? "" : AGENT_COLORS[sender];
   const agentName = isUser ? "You" : AGENT_NAMES[sender];
-
-  return (
-    <div
-      className={cn(
-        "flex mb-2 w-full",
-        isUser ? "justify-end" : "justify-start"
-      )}
-    >
-      {!isUser && (
-        <Avatar
-          className={cn(
-            "h-8 w-8 mr-2 flex items-center justify-center",
-            agentColor
-          )}
-        >
-          <Bot className="h-4 w-4 text-white" />
-        </Avatar>
-      )}
-      <div className="flex flex-col max-w-[80%]">
-        <span className="text-xs text-slate-500 mb-1">{agentName}</span>
-        <div
-          className={cn(
-            "rounded-lg px-3 py-1.5 text-sm break-words",
-            isUser
-              ? "bg-primary text-primary-foreground"
-              : "bg-white text-black font-semibold border border-slate-200"
-          )}
-        >
-          {text}
+  const isAgentAndIsUnHappy = !isUser && agentHappinessScore < 0.5;
+  
+    return (
+      <div
+        className={cn(
+          "flex mb-2 w-full",
+          isUser ? "justify-end" : "justify-start"
+        )}
+      >
+        {!isUser && (
+          <Avatar
+            className={cn(
+              "h-8 w-8 mr-2 flex items-center justify-center",
+              agentColor
+            )}
+          >
+            <Bot className="h-4 w-4 text-white" />
+          </Avatar>
+        )}
+        <div className="flex flex-col max-w-[80%]">
+          <span
+            className={`text-xs ${isAgentAndIsUnHappy ? "text-red-500 font-semibold" : "text-slate-500"} mb-1`}
+          >
+            {agentName}
+          </span>
+          <div
+            className={cn(
+              "rounded-lg px-3 py-1.5 text-sm break-words",
+              isUser
+                ? "bg-primary text-primary-foreground"
+                : `font-semibold border ${isAgentAndIsUnHappy ? "border-red-500 bg-red-200 text-black " : "border-slate-200 bg-white text-black "}`
+            )}
+          >
+            {text}
+          </div>
         </div>
+        {isUser && (
+          <Avatar className="h-8 w-8 ml-2 bg-primary flex items-center justify-center">
+            <User className="h-4 w-4 text-white" />
+          </Avatar>
+        )}
       </div>
-      {isUser && (
-        <Avatar className="h-8 w-8 ml-2 bg-primary flex items-center justify-center">
-          <User className="h-4 w-4 text-white" />
-        </Avatar>
-      )}
-    </div>
-  );
+    );
 };
 
 export interface AgentChatDisplayProps {
@@ -76,6 +83,32 @@ export interface AgentChatDisplayProps {
   agentHappinessScores: number[];
 }
 
+enum StatusHappiness {
+  Unhappy = "Unhappy",
+  Neutral = "Neutral",
+  Happy = "Happy",
+}
+
+const renderAgentHappiness = (
+  agentHappinessScores: number[],
+  agentIndex: number,
+) =>{
+  const happiness = agentHappinessScores[agentIndex];
+    let statusColor = "bg-red-500";
+    let statusHappiness: StatusHappiness = StatusHappiness.Unhappy;
+
+    if (happiness >= 0.7) {
+      statusColor = "bg-green-500";
+      statusHappiness = StatusHappiness.Happy;
+    } else if (happiness >= 0.4) {
+      statusColor = "bg-yellow-500";
+      statusHappiness = StatusHappiness.Neutral;
+    }
+  return {
+    statusColor,
+    statusHappiness,
+  }
+}
 export const AgentChatDisplay: React.FC<AgentChatDisplayProps> = ({
   messages,
   agentHappinessScores,
@@ -92,22 +125,11 @@ export const AgentChatDisplay: React.FC<AgentChatDisplayProps> = ({
   }, [messages]);
 
   const renderAgentStatus = (agentIndex: number) => {
-    const happiness = agentHappinessScores[agentIndex];
-    let statusColor = "bg-red-500";
-    let statusText = "Unhappy";
-
-    if (happiness >= 0.7) {
-      statusColor = "bg-green-500";
-      statusText = "Happy";
-    } else if (happiness >= 0.4) {
-      statusColor = "bg-yellow-500";
-      statusText = "Neutral";
-    }
+    const{ statusColor } = renderAgentHappiness(agentHappinessScores, agentIndex);
 
     return (
       <div className="flex items-center">
         <div className={`h-3 w-3 rounded-full ${statusColor} mr-1`}></div>
-        <span className="text-xs">{statusText}</span>
       </div>
     );
   };
@@ -152,7 +174,7 @@ export const AgentChatDisplay: React.FC<AgentChatDisplayProps> = ({
           <div className="flex flex-col items-center justify-center h-full">
             <AlertCircle className="text-slate-400 h-8 w-8 mb-2" />
             <p className="text-center text-sm text-slate-400 italic">
-              {t("phase2_chatPlaceholder")}
+              {t("phase2_waitingForAgentResponse")}
             </p>
             <p className="text-center text-xs text-slate-400 mt-2">
               {t("address_agent_hint")}
@@ -165,6 +187,8 @@ export const AgentChatDisplay: React.FC<AgentChatDisplayProps> = ({
             sender={msg.sender}
             text={msg.text}
             timestamp={msg.timestamp}
+            agentHappinessScore={msg.agentHappinessScore}
+              
           />
         ))}
         <div ref={messagesEndRef} />

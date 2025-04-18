@@ -1,7 +1,10 @@
+"use client";
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AgentChatMessageProps } from "./AgentChat";
 import { formatSelectionsForPrompt, PolicySelections } from "../types";
 import { PolicyAreaId, PolicyOptionId } from "@/lib/types/policy_types";
+import { debounce } from "@/lib/debouce";
 
 // Api route for agent interactions
 enum AgentRole {
@@ -23,37 +26,61 @@ export interface AgentResponse {
   agent3: AgentApiResponse;
 }
 
-const callAgentApi = async (
-  agentRole: AgentRole,
-  selections: PolicySelections,
-  agentSelections: string | null,
-  userMessage: string | null
-): Promise<AgentApiResponse | null> => {
-  const response = await fetch(`/api/agents/${agentRole}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      currentUserSelections: formatSelectionsForPrompt(selections),
-      agentPreferredSelections: agentSelections,
-      userMessage: userMessage ?? "",
-    }),
-  });
-
-  if (!response.ok) {
-    let errorMsg = `API Error: ${response.statusText}`;
+const callAgentApi = debounce(
+  async (
+    agentRole: AgentRole,
+    selections: PolicySelections,
+    agentSelections: string | null,
+    userMessage: string | null
+  ): Promise<AgentApiResponse | null> => {
     try {
-      const errorData = await response.json();
-      errorMsg = errorData.error || errorMsg;
-    } catch (parseError) {
-      console.error("Failed to parse error response:", parseError);
-    }
-    console.error("API Error:", errorMsg);
-    return null;
-  }
+      const response = await fetch(`/api/agents/${agentRole}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentUserSelections: formatSelectionsForPrompt(selections),
+          agentPreferredSelections: agentSelections,
+          userMessage: userMessage ?? "",
+        }),
+      });
 
-  return (await response.json()) as AgentApiResponse;
+      if (!response.ok) {
+        let errorMsg = `API Error: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (parseError) {
+          console.error("Failed to parse error response:", parseError);
+        }
+        console.error("API Error:", errorMsg);
+        return null;
+      }
+
+      return (await response.json()) as AgentApiResponse;
+    } catch (error) {
+      console.error("Network error calling agent API:", error);
+      return null;
+    }
+  },
+  2000, // 2 seconds debounce
+);
+
+// cache response for given selections so we don't call the api again
+const agentResponseCache: Record<string, AgentResponse> = {};
+const getCachedAgentResponse = (
+  selections: PolicySelections
+): AgentResponse | null => {
+  const cacheKey = JSON.stringify(selections);
+  return agentResponseCache[cacheKey] || null;
+};
+const setCachedAgentResponse = (
+  selections: PolicySelections,
+  response: AgentResponse
+): void => {
+  const cacheKey = JSON.stringify(selections);
+  agentResponseCache[cacheKey] = response;
 };
 
 const onPolicyChangeResponses = async (
@@ -62,6 +89,11 @@ const onPolicyChangeResponses = async (
   agent2Selections: string | null,
   agent3Selections: string | null
 ): Promise<AgentResponse | null> => {
+  // Check cache first
+  const cachedResponse = getCachedAgentResponse(selections);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
   // call all agents
   const agent1Response = await callAgentApi(
     AgentRole.STATE,
@@ -85,11 +117,33 @@ const onPolicyChangeResponses = async (
     return null;
   }
 
-  return {
+  const response = {
     agent1: agent1Response,
     agent2: agent2Response,
     agent3: agent3Response,
   };
+
+  // Cache the response
+  setCachedAgentResponse(selections, response);
+  return response;
+};
+
+// cache agent response for given message so we don't call the api again
+const agentMessageResponseCache: Record<string, AgentApiResponse> = {};
+const getCachedAgentMessageResponse = (
+  message: string,
+  targetAgent: AgentRole
+): AgentApiResponse | null => {
+  const cacheKey = `${targetAgent}-${message}`;
+  return agentMessageResponseCache[cacheKey] || null;
+};
+const setCachedAgentMessageResponse = (
+  message: string,
+  targetAgent: AgentRole,
+  response: AgentApiResponse
+): void => {
+  const cacheKey = `${targetAgent}-${message}`;
+  agentMessageResponseCache[cacheKey] = response;
 };
 
 const onAgentMessageResponse = async (
@@ -100,6 +154,11 @@ const onAgentMessageResponse = async (
   agent2Selections: string | null,
   agent3Selections: string | null
 ): Promise<AgentApiResponse | null> => {
+  // Check cache first
+  const cachedResponse = getCachedAgentMessageResponse(message, targetAgent);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
   // call specific agent
   const agentResponse = await callAgentApi(
     targetAgent,
@@ -107,13 +166,15 @@ const onAgentMessageResponse = async (
     targetAgent === AgentRole.STATE
       ? agent1Selections
       : targetAgent === AgentRole.CITIZEN
-      ? agent2Selections
-      : agent3Selections,
+        ? agent2Selections
+        : agent3Selections,
     message
   );
   if (!agentResponse) {
     return null;
   }
+  // Cache the response
+  setCachedAgentMessageResponse(message, targetAgent, agentResponse);
   return agentResponse;
 };
 
@@ -206,16 +267,19 @@ export function useAgentInteractions({
               sender: "agent1",
               text: responses.agent1.specificResponse,
               timestamp: new Date(),
+              agentHappinessScore:responses.agent1.happiness,
             },
             {
               sender: "agent2",
               text: responses.agent2.specificResponse,
               timestamp: new Date(Date.now() + 100),
+              agentHappinessScore: responses.agent2.happiness,
             },
             {
               sender: "agent3",
               text: responses.agent3.specificResponse,
               timestamp: new Date(Date.now() + 200),
+              agentHappinessScore: responses.agent3.happiness,
             },
           ];
 
@@ -279,6 +343,7 @@ export function useAgentInteractions({
           sender: "user",
           text: message,
           timestamp: new Date(),
+          agentHappinessScore: 0,
         },
       ]);
 
@@ -336,10 +401,11 @@ export function useAgentInteractions({
             targetAgent === AgentRole.STATE
               ? "agent1"
               : targetAgent === AgentRole.CITIZEN
-              ? "agent2"
-              : "agent3",
+                ? "agent2"
+                : "agent3",
           text: agentResponse.specificResponse,
           timestamp: new Date(),
+          agentHappinessScore: agentResponse.happiness,
         };
 
         // Update happiness score for the target agent
@@ -348,8 +414,8 @@ export function useAgentInteractions({
           targetAgent === AgentRole.STATE
             ? 0
             : targetAgent === AgentRole.CITIZEN
-            ? 1
-            : 2;
+              ? 1
+              : 2;
         newHappinessScores[agentIndex] = agentResponse.happiness;
 
         // Slight delay for more natural-feeling conversation
