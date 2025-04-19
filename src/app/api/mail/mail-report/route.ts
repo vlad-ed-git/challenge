@@ -129,8 +129,8 @@ export async function sendReportEmail(report: ReflectionReportData,): Promise<vo
     try {
         const htmlBody = formatReportAsHtml(report);
         const receipientEmails = [
-            "vkowelo@asu.edu",
             "aturan@asu.edu",
+            "vkowelo@asu.edu",
             "JANEL.WHITE@asu.edu",
         ]
         const resend = new Resend(
