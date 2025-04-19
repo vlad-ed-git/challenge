@@ -129,13 +129,10 @@ export async function sendReportEmail(report: ReflectionReportData,): Promise<vo
     try {
         const htmlBody = formatReportAsHtml(report);
         const receipientEmails = [
+            "vkowelo@asu.edu",
             "aturan@asu.edu",
             "JANEL.WHITE@asu.edu",
-            "vkowelo@asu.edu",
         ]
-
-
-
         const resend = new Resend(
             process.env.RESEND_API_KEY
         );
@@ -150,8 +147,7 @@ export async function sendReportEmail(report: ReflectionReportData,): Promise<vo
         }
 
     } catch (error) {
-        console.error("Failed to send report email:", error);
-        throw new Error("Failed to send report email");
+        throw new Error(`Failed to send report email got error ${error}`);
     }
 }
 
@@ -171,8 +167,10 @@ export async function POST(request: Request) {
 
         return new Response(JSON.stringify({ message: "Report email sent successfully" }), { status: 200 });
     } catch (error) {
-        console.error("Error processing request:", error);
-        return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
+
+        return new Response(JSON.stringify({
+            error: `Internal Server Error ${error}`
+        }), { status: 500, });
     }
 }
 
