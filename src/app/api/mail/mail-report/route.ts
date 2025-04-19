@@ -165,7 +165,7 @@ export async function POST(request: Request) {
         // Send the email
         await sendReportEmail(report);
 
-        return new Response(JSON.stringify({ message: "Report email sent successfully" }), { status: 200 });
+        return new Response(JSON.stringify({ message: "Report email sent successfully!" }), { status: 200 });
     } catch (error) {
 
         return new Response(JSON.stringify({
