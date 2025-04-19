@@ -141,16 +141,12 @@ export async function sendReportEmail(report: ReflectionReportData,): Promise<vo
         );
 
         for (const email of receipientEmails) {
-            try {
-                await resend.emails.send({
-                    from: 'onboarding@resend.dev',
-                    to: email,
-                    subject: 'CHALLENGE Game Reflection Report',
-                    html: htmlBody,
-                });
-            } catch (e) {
-                console.error(`Failed to send report email to ${email}:`, e);
-            }
+            await resend.emails.send({
+                from: 'onboarding@resend.dev',
+                to: email,
+                subject: 'CHALLENGE Game Reflection Report',
+                html: htmlBody,
+            });
         }
 
     } catch (error) {
