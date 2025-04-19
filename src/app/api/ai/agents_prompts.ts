@@ -30,8 +30,12 @@ export const generateAgentInteractionPrompt = (
 
     let taskDescription = `
 **Task:** You are the ${agentRole} agent. Analyze the user's current policy selections compared to your preferred package. Then, respond to the user.
-Your Preferred Policies:
-${agentPrefText ? `You have decided these to be your selections: ${agentPrefText} Your goal now is to persuade the user to align with you unless they convince you to change (do not easily budge)` : "You need to generate your preferred policies based on your role's priorities."}
+
+
+${agentPrefText ? `Your Preferred Policies:
+        So far, you have decided these to be your selections: ${agentPrefText}
+        ` : ""}
+
 
 User's Current Policies:
 ${userSelectionsText}`;
@@ -43,7 +47,7 @@ ${userSelectionsText}`;
 
 
     if (userMessage && userMessage.trim().length > 0) {
-        taskDescription += `\n\nUser's Last Message: ${userMessage}`;
+        taskDescription += `\n\nUser's Message: ${userMessage}`;
         taskDescription += `\nInstructions: Generate a response considering the user's message, your role's priorities, the current policy selections, and your preferred policies. Your response MUST include:`;
     } else {
         taskDescription += `\n\nInstructions: Generate a response reflecting on the user's current policy selections based on your role's priorities and your preferred policies. Your response MUST include:`;

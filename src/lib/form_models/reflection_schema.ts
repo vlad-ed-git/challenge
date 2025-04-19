@@ -44,6 +44,7 @@ export interface ReflectionReportData {
     userId: string; 
     userProfileSnapshot: {
         uid: string;
+        email: string;
         age: number;
         nationality: string;
         occupation: string;

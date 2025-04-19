@@ -89,7 +89,7 @@ function formatReportAsHtml(report: ReflectionReportData): string {
     const htmlBody = `
         <div style="${styles.body}">
             <h1 style="${styles.h1}">CHALLENGE Game Reflection Report</h1>
-            <p style="${styles.p}"><strong style="${styles.strong}">User ID:</strong> <code style="${styles.code}">${report.userId}</code></p>
+            <p style="${styles.p}"><strong style="${styles.strong}">User Email:</strong> <code style="${styles.code}">${report.userProfileSnapshot.email}</code></p>
 
             <p style="${styles.p}"><strong style="${styles.strong}">Submitted At:</strong> ${submittedDate} via <a href="https://lou-challenge.vercel.app/">Website Link</a></p>
 
@@ -128,9 +128,10 @@ function formatReportAsHtml(report: ReflectionReportData): string {
 export async function sendReportEmail(report: ReflectionReportData,): Promise<void> {
     try {
         const htmlBody = formatReportAsHtml(report);
-        const receipientEmails = ["vkowelo@asu.edu",
+        const receipientEmails = [
             "aturan@asu.edu",
-            "JANEL.WHITE@asu.edu"
+            "JANEL.WHITE@asu.edu",
+            "vkowelo@asu.edu",
         ]
 
 
@@ -139,12 +140,19 @@ export async function sendReportEmail(report: ReflectionReportData,): Promise<vo
             process.env.RESEND_API_KEY
         );
 
-        resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: receipientEmails,
-            subject: 'CHALLENGE Game Reflection Report',
-            html: htmlBody,
-        });
+        for (const email of receipientEmails) {
+            try {
+                await resend.emails.send({
+                    from: 'onboarding@resend.dev',
+                    to: email,
+                    subject: 'CHALLENGE Game Reflection Report',
+                    html: htmlBody,
+                });
+            } catch (e) {
+                console.error(`Failed to send report email to ${email}:`, e);
+            }
+        }
+
     } catch (error) {
         console.error("Failed to send report email:", error);
         throw new Error("Failed to send report email");
