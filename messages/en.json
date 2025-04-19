@@ -261,7 +261,6 @@
   "profile_updateSuccess": "Profile updated successfully!",
   "profile_updateError": "Failed to update profile. Please try again.",
   "my_profile": "My Profile",
-
   "onboarding_mode_title": "Choose Your Experience",
   "onboarding_mode_subtitle": "How would you like to play CHALLENGE?",
   "onboarding_mode_single": "Single Player",

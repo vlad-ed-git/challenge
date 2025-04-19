@@ -31,9 +31,11 @@ export const generateAgentInteractionPrompt = (
     let taskDescription = `
 **Task:** You are the ${agentRole} agent. Analyze the user's current policy selections compared to your preferred package. Then, respond to the user.
 
+
 ${agentPrefText ? `Your Preferred Policies:
         So far, you have decided these to be your selections: ${agentPrefText}
         ` : ""}
+
 
 User's Current Policies:
 ${userSelectionsText}`;
