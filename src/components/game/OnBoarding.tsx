@@ -25,9 +25,13 @@ import {
   Computer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { on } from "events";
 
 interface GameOnboardingProps {
-  onOnboardingComplete: () => void;
+  onOnboardingComplete: (
+    isSinglePlayerMode: boolean,
+    
+  ) => void;
 }
 
 const onboardingSteps = [
@@ -51,13 +55,16 @@ export function GameOnboarding({ onOnboardingComplete }: GameOnboardingProps) {
   const t = useTranslations();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [isSinglePlayerMode, setIsSinglePlayerMode] = useState(true);
 
   const nextStep = () => {
     if (currentStepIndex < onboardingSteps.length - 1) {
       setDirection(1);
       setCurrentStepIndex(currentStepIndex + 1);
     } else {
-      onOnboardingComplete();
+      onOnboardingComplete(
+        isSinglePlayerMode,
+      );
     }
   };
 
@@ -107,7 +114,10 @@ export function GameOnboarding({ onOnboardingComplete }: GameOnboardingProps) {
         return (
           <ModeChoiceStep
             key="mode_choice"
-            onNext={nextStep}
+            onNext={(isSinglePlayer) => {
+              setIsSinglePlayerMode(isSinglePlayer);
+              nextStep();
+            } }
             t={t}
             direction={direction}
             variants={variants}
@@ -204,7 +214,7 @@ const StepContainer: React.FC<{
 
 // Mode Choice Step
 const ModeChoiceStep: React.FC<{
-  onNext: () => void;
+  onNext: (isSinglePlayerMode: boolean) => void;
   t: ReturnType<typeof useTranslations>;
   direction: number;
   variants: any;
@@ -234,8 +244,8 @@ const ModeChoiceStep: React.FC<{
       >
         <motion.div
           variants={itemVariants}
-          className="flex-1 p-6 bg-slate-800/70 border border-primary rounded-lg text-center backdrop-blur-sm cursor-pointer transition-all hover:border-primary hover:ring-2 hover:ring-primary hover:shadow-lg"
-          onClick={onNext}
+          className="flex-1 p-6 bg-slate-800/70 border  rounded-lg text-center backdrop-blur-sm cursor-pointer transition-all hover:border-primary hover:ring-2 hover:ring-primary hover:shadow-lg"
+          onClick={() => onNext(true)}
         >
           <div className="mx-auto mb-4 rounded-full p-3 bg-primary/20 inline-block">
             <Computer className="h-8 w-8 text-primary" />
@@ -249,18 +259,16 @@ const ModeChoiceStep: React.FC<{
         </motion.div>
         <motion.div
           variants={itemVariants}
-          className="flex-1 p-6 bg-slate-900/50 border border-slate-700 rounded-lg text-center backdrop-blur-sm opacity-50 cursor-not-allowed relative"
+          className="flex-1 p-6 bg-slate-800/70 border  rounded-lg text-center backdrop-blur-sm cursor-pointer transition-all hover:border-primary hover:ring-2 hover:ring-primary hover:shadow-lg"
+          onClick={() => onNext(false)}
         >
-          <div className="absolute top-2 right-2 bg-amber-500 text-amber-900 text-xs font-bold px-2 py-0.5 rounded">
-            {t("coming_soon")}
+          <div className="mx-auto mb-4 rounded-full p-3 bg-primary/20 inline-block">
+            <Users className="h-8 w-8 text-primary" />
           </div>
-          <div className="mx-auto mb-4 rounded-full p-3 bg-slate-700/50 inline-block">
-            <Users className="h-8 w-8 text-slate-500" />
-          </div>
-          <h3 className="text-xl font-semibold text-slate-400 mb-2">
+          <h3 className="text-xl font-semibold text-slate-100 mb-2">
             {t("onboarding_mode_multi")}
           </h3>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-300">
             {t("onboarding_mode_multi_desc")}
           </p>
         </motion.div>
