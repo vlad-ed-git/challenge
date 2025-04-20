@@ -8,9 +8,11 @@ import { GamePhaseTwoInterface } from "./GamePhaseTwoInterface";
 import { ReflectionPhase } from "./ReflectionPhase";
 import { useAuth } from "@/lib/firebase/auth";
 import { useRouter } from "next/navigation";
+import { MultiplayerModeInterface } from "./multiplayer/MultiplayerModeInterface";
 
 export default function GamePlay() {
   const { currentUserProfile, loadingUserProfile } = useAuth();
+  const [isSinglePlayerMode, setIsSinglePlayerMode] = useState<boolean>(true);
 
   const route = useRouter();
   useEffect(() => {
@@ -20,9 +22,7 @@ export default function GamePlay() {
       route.push("/login");
       return;
     }
-  }, [currentUserProfile, loadingUserProfile])
-  
-  
+  }, [currentUserProfile, loadingUserProfile]);
 
   const [gamePhase, setGamePhase] = useState<GamePhase>(GamePhase.ONBOARDING);
   const [phaseOneSelections, setPhaseOneSelections] =
@@ -63,14 +63,19 @@ export default function GamePlay() {
       case GamePhase.ONBOARDING:
         return (
           <GameOnboarding
-            onOnboardingComplete={() => {
+            onOnboardingComplete={(isSinglePlayerMode: boolean) => {
+              setIsSinglePlayerMode(isSinglePlayerMode);
               handleOnboardingComplete();
             }}
           />
         );
       case GamePhase.PHASE_1_DECISION:
-        return (
+        return isSinglePlayerMode ? (
           <GamePhaseOneInterface onPhaseComplete={handlePhaseOneComplete} />
+        ) : (
+            <MultiplayerModeInterface
+              currentUserProfile={currentUserProfile!}
+            />
         );
       case GamePhase.PHASE_2_DIALOGUE:
         return (
@@ -80,19 +85,23 @@ export default function GamePlay() {
           />
         );
       case GamePhase.PHASE_3_REFLECTION:
-        return <ReflectionPhase
-          phaseOneSelections={phaseOneSelections}
-          phaseTwoSelections={phaseTwoSelections}
-          agent1StateHappiness={agent1StateHappiness}
-          agent2CitizensHappiness={agent2CitizensHappiness}
-          agent3HumanRightsHappiness={agent3HumanRightsHappiness}
-        />;
+        return (
+          <ReflectionPhase
+            phaseOneSelections={phaseOneSelections}
+            phaseTwoSelections={phaseTwoSelections}
+            agent1StateHappiness={agent1StateHappiness}
+            agent2CitizensHappiness={agent2CitizensHappiness}
+            agent3HumanRightsHappiness={agent3HumanRightsHappiness}
+          />
+        );
       default:
         return <div>Error: Unknown game phase</div>;
     }
   };
 
-  return  loadingUserProfile || !currentUserProfile ? (
-      <div>Loading...</div>
-    ) : <>{renderGameContent()}</>;
+  return loadingUserProfile || !currentUserProfile ? (
+    <div>Loading...</div>
+  ) : (
+    <>{renderGameContent()}</>
+  );
 }
