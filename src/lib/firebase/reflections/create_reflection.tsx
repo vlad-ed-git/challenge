@@ -1,7 +1,7 @@
 "use client";;
 import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../config";
-import { ReflectionFormValues, ReflectionReportData, reflectionsCollection } from "@/lib/form_models/reflection_schema";
+import { ReflectionReportData, reflectionsCollection } from "@/lib/form_models/reflection_schema";
 
 interface IEditProfileResult {
   success: boolean;
